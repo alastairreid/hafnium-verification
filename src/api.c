@@ -42,11 +42,11 @@
  * Locks of the same kind require the lock of lowest address to be locked first,
  * see `sl_lock_both()`.
  */
-
+#if 0
 static_assert(HF_MAILBOX_SIZE == PAGE_SIZE,
 	      "Currently, a page is mapped for the send and receive buffers so "
 	      "the maximum request is the size of a page.");
-
+#endif
 static struct mpool api_page_pool;
 
 /**

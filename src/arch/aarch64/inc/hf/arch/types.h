@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
-#pragma once
+//#pragma once
+#ifdef HF_ARCH_TYPES_H
+#else
+#define HF_ARCH_TYPES_H
 
 #include <stdalign.h>
 #include <stdint.h>
@@ -150,3 +153,4 @@ struct arch_regs {
 		uintreg_t cntv_ctl_el0;
 	} peripherals;
 };
+#endif

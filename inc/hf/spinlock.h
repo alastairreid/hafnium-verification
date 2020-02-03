@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
-#pragma once
+//#pragma once
+#ifdef HF_SPINLOCK_H
+#else
+#define HF_SPINLOCK_H
 
 /*
  * Includes the arch-specific definition of 'struct spinlock' and
@@ -44,3 +47,4 @@ static inline void sl_lock_both(struct spinlock *a, struct spinlock *b)
 		sl_lock(a);
 	}
 }
+#endif

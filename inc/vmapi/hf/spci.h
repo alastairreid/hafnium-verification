@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
-#pragma once
+//#pragma once
+#ifdef VMAPI_HF_SPCI_H
+#else
+#define VMAPI_HF_SPCI_H
 
 #include "hf/types.h"
 
@@ -315,3 +318,5 @@ uint32_t spci_memory_region_init(
 	spci_memory_region_flags_t flags, enum spci_memory_access access,
 	enum spci_memory_type type, enum spci_memory_cacheability cacheability,
 	enum spci_memory_shareability shareability);
+
+#endif

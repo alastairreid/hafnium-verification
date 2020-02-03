@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
-#pragma once
+// #pragma once
+#ifdef VMAPI_HF_TYPES_H
+#else
+#define VMAPI_HF_TYPES_H
 
 /* Define the standard types for the platform. */
 #if defined(__linux__) && defined(__KERNEL__)
@@ -76,3 +79,5 @@ typedef uintptr_t hf_ipaddr_t;
 
 /** The virtual interrupt ID used for the virtual timer. */
 #define HF_VIRTUAL_TIMER_INTID 3
+
+#endif

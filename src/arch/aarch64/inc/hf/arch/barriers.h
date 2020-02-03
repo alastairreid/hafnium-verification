@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#pragma once
+//#pragma once
 
 /** AArch64-specific API */
 

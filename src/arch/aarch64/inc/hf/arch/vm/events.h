@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#pragma once
+//#pragma once
 
 void event_wait(void);
 void event_send_local(void);

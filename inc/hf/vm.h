@@ -51,7 +51,7 @@ enum mailbox_state {
 	MAILBOX_STATE_RECEIVED,
 
 	/** There is a message in the mailbox that has been read. */
-	MAILBOX_STATE_READ,
+	MAILBOX_STATE_READ
 };
 
 struct wait_entry {

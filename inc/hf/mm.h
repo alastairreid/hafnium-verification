@@ -86,10 +86,12 @@
 struct mm_page_table {
 	alignas(PAGE_SIZE) pte_t entries[MM_PTE_PER_PAGE];
 };
+#if 0
 static_assert(sizeof(struct mm_page_table) == PAGE_SIZE,
 	      "A page table must take exactly one page.");
 static_assert(alignof(struct mm_page_table) == PAGE_SIZE,
 	      "A page table must be page aligned.");
+#endif
 
 struct mm_ptable {
 	/** Address of the root of the page table. */

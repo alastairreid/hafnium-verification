@@ -44,7 +44,7 @@ enum vcpu_state {
 	VCPU_STATE_BLOCKED_INTERRUPT,
 
 	/** The vCPU has aborted. */
-	VCPU_STATE_ABORTED,
+	VCPU_STATE_ABORTED
 };
 
 struct interrupts {

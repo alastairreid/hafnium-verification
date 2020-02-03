@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
-#pragma once
+//#pragma once
+#ifdef HF_MPOOL_H
+#else
+#define HF_MPOOL_H
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -38,3 +41,4 @@ bool mpool_add_chunk(struct mpool *p, void *begin, size_t size);
 void *mpool_alloc(struct mpool *p);
 void *mpool_alloc_contiguous(struct mpool *p, size_t count, size_t align);
 void mpool_free(struct mpool *p, void *ptr);
+#endif

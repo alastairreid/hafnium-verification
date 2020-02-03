@@ -44,7 +44,13 @@ typedef struct {
  */
 static inline paddr_t pa_init(uintpaddr_t p)
 {
+#if 1
+	paddr_t r;
+	r.pa = p;
+	return r;
+#else
 	return (paddr_t){.pa = p};
+#endif
 }
 
 /**
@@ -76,7 +82,13 @@ static inline size_t pa_difference(paddr_t start, paddr_t end)
  */
 static inline ipaddr_t ipa_init(uintpaddr_t ipa)
 {
+#if 1
+	ipaddr_t r;
+	r.ipa = ipa;
+	return r;
+#else
 	return (ipaddr_t){.ipa = ipa};
+#endif
 }
 
 /**
@@ -100,7 +112,13 @@ static inline ipaddr_t ipa_add(ipaddr_t ipa, size_t n)
  */
 static inline vaddr_t va_init(uintvaddr_t v)
 {
+#if 1
+	vaddr_t r;
+	r.va = v;
+	return r;
+#else
 	return (vaddr_t){.va = v};
+#endif
 }
 
 /**
@@ -148,7 +166,13 @@ static inline paddr_t pa_from_ipa(ipaddr_t ipa)
  */
 static inline vaddr_t va_from_ptr(const void *p)
 {
+#if 1
+	vaddr_t r;
+	r.va = (uintvaddr_t)p;
+	return r;
+#else
 	return (vaddr_t){.va = (uintvaddr_t)p};
+#endif
 }
 
 /**

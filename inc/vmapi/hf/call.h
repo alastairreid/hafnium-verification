@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
-#pragma once
+// #pragma once
+#ifdef VMAPI_HF_CALL_H
+#else
+#define VMAPI_HF_CALL_H
 
 #include "hf/abi.h"
 #include "hf/spci.h"
@@ -325,3 +328,5 @@ static inline struct spci_value spci_features(uint32_t function_id)
 	return spci_call((struct spci_value){.func = SPCI_FEATURES_32,
 					     .arg1 = function_id});
 }
+
+#endif

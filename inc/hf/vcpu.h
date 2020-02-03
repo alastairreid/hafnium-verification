@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
-#pragma once
+//#pragma once
+#ifdef HF_VCPU_H
+#else
+#define HF_VCPU_H
 
 #include "hf/addr.h"
 #include "hf/spinlock.h"
@@ -103,3 +106,4 @@ bool vcpu_secondary_reset_and_start(struct vcpu *vcpu, ipaddr_t entry,
 
 bool vcpu_handle_page_fault(const struct vcpu *current,
 			    struct vcpu_fault_info *f);
+#endif

@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
-#pragma once
+//#pragma once
+#ifdef HF_VM_H
+#else
+#define HF_VM_H
 
 #include <stdatomic.h>
 
@@ -164,3 +167,4 @@ void vm_identity_commit(struct vm_locked vm_locked, paddr_t begin, paddr_t end,
 bool vm_unmap(struct vm_locked vm_locked, paddr_t begin, paddr_t end,
 	      struct mpool *ppool);
 bool vm_unmap_hypervisor(struct vm_locked vm_locked, struct mpool *ppool);
+#endif

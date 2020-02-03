@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#pragma once
+//#pragma once
 
 /**
  * Spinlock implementation using Armv8.0 LDXR/STXR pair and a WFE pause.

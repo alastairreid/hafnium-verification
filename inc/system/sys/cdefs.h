@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#pragma once
+// #pragma once
 
 /*
  * Empty file to make Android Clang stdatomic.h happy. It includes this internal

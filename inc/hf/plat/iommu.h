@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#pragma once
+//#pragma once
 
 #include "hf/addr.h"
 #include "hf/fdt.h"

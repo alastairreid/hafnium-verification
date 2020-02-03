@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#pragma once
+// #pragma once
 
 #include "hf/cpu.h"
 #include "hf/mpool.h"

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#pragma once
+// #pragma once
 
 /**
  * Performs arch specific boot time initialization.

@@ -14,7 +14,11 @@
  * limitations under the License.
  */
 
-#pragma once
+// #pragma once
+#ifdef HF_ARCH_CPU_H
+struct cpu;
+#else
+#define HF_ARCH_CPU_H
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -23,9 +27,10 @@
 #include "hf/arch/types.h"
 
 #include "hf/addr.h"
-#include "hf/vcpu.h"
+// #include "hf/vcpu.h"
+struct vcpu;
 
-#include "vmapi/hf/spci.h"
+//#include "vmapi/hf/spci.h"
 
 /**
  * Reset the register values other than the PC and argument which are set with
@@ -54,3 +59,4 @@ void arch_regs_set_retval(struct arch_regs *r, struct spci_value v);
  * Initialize and reset CPU-wide register values.
  */
 void arch_cpu_init(void);
+#endif

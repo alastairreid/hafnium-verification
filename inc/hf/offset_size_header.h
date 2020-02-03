@@ -19,7 +19,7 @@
  * 'offset_size_header' build rule. See overview in 'offset_size_header.gni'.
  */
 
-#pragma once
+//#pragma once
 
 #if (defined GENERATE_BINARY) && (defined VERIFY_HEADER)
 #error Only one action can be specified

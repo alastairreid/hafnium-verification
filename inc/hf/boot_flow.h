@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#pragma once
+// #pragma once
 
 #include "hf/boot_params.h"
 #include "hf/manifest.h"

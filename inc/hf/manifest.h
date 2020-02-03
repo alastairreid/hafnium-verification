@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#pragma once
+//#pragma once
 
 #include "hf/fdt.h"
 #include "hf/memiter.h"

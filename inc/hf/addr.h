@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
-#pragma once
+//#pragma once
+#ifdef ADDR_H
+#else
+#define ADDR_H
 
 #include <stddef.h>
 #include <stdint.h>
@@ -157,3 +160,4 @@ static inline void *ptr_from_va(vaddr_t va)
 {
 	return (void *)va_addr(va);
 }
+#endif

@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
-#pragma once
+// #pragma once
+#ifdef HF_CPU_H
+#else
+#define HF_CPU_H
 
 #include "hf/arch/cpu.h"
 
@@ -41,3 +44,5 @@ void cpu_off(struct cpu *c);
 struct cpu *cpu_find(cpu_id_t id);
 uint8_t *cpu_get_buffer(struct cpu *c);
 uint32_t cpu_get_buffer_size(struct cpu *c);
+
+#endif

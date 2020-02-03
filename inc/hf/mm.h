@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
-#pragma once
+//#pragma once
+#ifdef HF_MM_H
+#else
+#define HF_MM_H
 
 #include <stdalign.h>
 #include <stdbool.h>
@@ -129,3 +132,4 @@ bool mm_unmap(struct mm_stage1_locked stage1_locked, paddr_t begin, paddr_t end,
 void mm_defrag(struct mm_stage1_locked stage1_locked, struct mpool *ppool);
 
 bool mm_init(struct mpool *ppool);
+#endif

@@ -59,8 +59,10 @@ struct float_reg {
 	uint64_t high;
 };
 
+/*
 static_assert(sizeof(struct float_reg) == FLOAT_REG_BYTES,
 	      "Ensure float register type is 128 bits.");
+*/
 
 #define MAX_CPUS 1
 

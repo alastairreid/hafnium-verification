@@ -19,3 +19,6 @@
 #include <stdnoreturn.h>
 
 noreturn void abort(void);
+//@ requires true;
+//@ ensures false;
+//@ terminates;

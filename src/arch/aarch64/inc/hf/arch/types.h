@@ -62,6 +62,16 @@ struct float_reg {
 static_assert(sizeof(struct float_reg) == FLOAT_REG_BYTES,
 	      "Ensure float register type is 128 bits.");
 
+/*
+ * Masks for feature registers trappable by HCR_EL2.TID3.
+ */
+struct tid3 {
+	uintreg_t id_aa64mmfr1_el1;
+	uintreg_t id_aa64pfr0_el1;
+	uintreg_t id_aa64dfr0_el1;
+	uintreg_t id_aa64isar1_el1;
+};
+
 /** Arch-specific information about a VM. */
 struct arch_vm {
 	/**
@@ -73,15 +83,57 @@ struct arch_vm {
 	spci_vcpu_index_t last_vcpu_on_cpu[MAX_CPUS];
 	arch_features_t trapped_features;
 
-	/*
-	 * Masks for feature registers trappable by HCR_EL2.TID3.
-	 */
-	struct {
-		uintreg_t id_aa64mmfr1_el1;
-		uintreg_t id_aa64pfr0_el1;
-		uintreg_t id_aa64dfr0_el1;
-		uintreg_t id_aa64isar1_el1;
-	} tid3_masks;
+	struct tid3 tid3_masks;
+};
+
+/*
+ * System registers.
+ * NOTE: Ordering is important. If adding to or reordering registers
+ * below, make sure to update src/arch/aarch64/hypervisor/exceptions.S.
+ */
+struct sys_regs {
+	uintreg_t vmpidr_el2;
+	uintreg_t csselr_el1;
+	uintreg_t sctlr_el1;
+	uintreg_t actlr_el1;
+	uintreg_t cpacr_el1;
+	uintreg_t ttbr0_el1;
+	uintreg_t ttbr1_el1;
+	uintreg_t tcr_el1;
+	uintreg_t esr_el1;
+	uintreg_t afsr0_el1;
+	uintreg_t afsr1_el1;
+	uintreg_t far_el1;
+	uintreg_t mair_el1;
+	uintreg_t vbar_el1;
+	uintreg_t contextidr_el1;
+	uintreg_t tpidr_el0;
+	uintreg_t tpidrro_el0;
+	uintreg_t tpidr_el1;
+	uintreg_t amair_el1;
+	uintreg_t cntkctl_el1;
+	uintreg_t sp_el0;
+	uintreg_t sp_el1;
+	uintreg_t elr_el1;
+	uintreg_t spsr_el1;
+	uintreg_t par_el1;
+	uintreg_t hcr_el2;
+	uintreg_t cnthctl_el2;
+	uintreg_t vttbr_el2;
+	uintreg_t mdcr_el2;
+	uintreg_t mdscr_el1;
+	uintreg_t pmccfiltr_el0;
+	uintreg_t pmcr_el0;
+	uintreg_t pmcntenset_el0;
+	uintreg_t pmintenset_el1;
+};
+
+/*
+ * Peripheral registers, handled separately from other system registers.
+ */
+struct peripheral_regs {
+	uintreg_t cntv_cval_el0;
+	uintreg_t cntv_ctl_el0;
 };
 
 /** Type to represent the register state of a vCPU. */
@@ -91,47 +143,7 @@ struct arch_regs {
 	uintreg_t pc;
 	uintreg_t spsr;
 
-	/*
-	 * System registers.
-	 * NOTE: Ordering is important. If adding to or reordering registers
-	 * below, make sure to update src/arch/aarch64/hypervisor/exceptions.S.
-	 */
-	struct {
-		uintreg_t vmpidr_el2;
-		uintreg_t csselr_el1;
-		uintreg_t sctlr_el1;
-		uintreg_t actlr_el1;
-		uintreg_t cpacr_el1;
-		uintreg_t ttbr0_el1;
-		uintreg_t ttbr1_el1;
-		uintreg_t tcr_el1;
-		uintreg_t esr_el1;
-		uintreg_t afsr0_el1;
-		uintreg_t afsr1_el1;
-		uintreg_t far_el1;
-		uintreg_t mair_el1;
-		uintreg_t vbar_el1;
-		uintreg_t contextidr_el1;
-		uintreg_t tpidr_el0;
-		uintreg_t tpidrro_el0;
-		uintreg_t tpidr_el1;
-		uintreg_t amair_el1;
-		uintreg_t cntkctl_el1;
-		uintreg_t sp_el0;
-		uintreg_t sp_el1;
-		uintreg_t elr_el1;
-		uintreg_t spsr_el1;
-		uintreg_t par_el1;
-		uintreg_t hcr_el2;
-		uintreg_t cnthctl_el2;
-		uintreg_t vttbr_el2;
-		uintreg_t mdcr_el2;
-		uintreg_t mdscr_el1;
-		uintreg_t pmccfiltr_el0;
-		uintreg_t pmcr_el0;
-		uintreg_t pmcntenset_el0;
-		uintreg_t pmintenset_el1;
-	} lazy;
+	struct sys_regs lazy;
 
 	/* Floating point registers. */
 	struct float_reg fp[32];
@@ -145,12 +157,6 @@ struct arch_regs {
 	} gic;
 #endif
 
-	/*
-	 * Peripheral registers, handled separately from other system registers.
-	 */
-	struct {
-		uintreg_t cntv_cval_el0;
-		uintreg_t cntv_ctl_el0;
-	} peripherals;
+	struct peripheral_regs peripherals;
 };
 #endif

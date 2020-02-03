@@ -35,7 +35,14 @@ struct spci_value spci_call(struct spci_value args);
  */
 static inline struct spci_value spci_id_get(void)
 {
+#if 1
+#define SPCI_ID_GET_32 0x84000069
+	struct spci_value x;
+	x.func = SPCI_ID_GET_32;
+	return spci_call(x);
+#else
 	return spci_call((struct spci_value){.func = SPCI_ID_GET_32});
+#endif
 }
 
 /**
@@ -68,8 +75,15 @@ static inline spci_vcpu_count_t hf_vcpu_get_count(spci_vm_id_t vm_id)
 static inline struct spci_value spci_run(spci_vm_id_t vm_id,
 					 spci_vcpu_index_t vcpu_idx)
 {
+#if 1
+	struct spci_value x;
+	x.func = SPCI_RUN_32;
+	x.arg1 = spci_vm_vcpu(vm_id, vcpu_idx);
+	return spci_call(x);
+#else
 	return spci_call((struct spci_value){.func = SPCI_RUN_32,
-					     spci_vm_vcpu(vm_id, vcpu_idx)});
+					     .arg1 = spci_vm_vcpu(vm_id, vcpu_idx)});
+#endif
 }
 
 /**
@@ -78,7 +92,13 @@ static inline struct spci_value spci_run(spci_vm_id_t vm_id,
  */
 static inline struct spci_value spci_yield(void)
 {
+#if 1
+	struct spci_value x;
+	x.func = SPCI_YIELD_32;
+	return spci_call(x);
+#else
 	return spci_call((struct spci_value){.func = SPCI_YIELD_32});
+#endif
 }
 
 /**
@@ -99,11 +119,20 @@ static inline struct spci_value spci_yield(void)
 static inline struct spci_value spci_rxtx_map(hf_ipaddr_t send,
 					      hf_ipaddr_t recv)
 {
+#if 1
+        struct spci_value x;
+	x.func = SPCI_RXTX_MAP_32;
+	x.arg1 = send;
+	x.arg2 = recv;
+	x.arg3 = HF_MAILBOX_SIZE / SPCI_PAGE_SIZE;
+	return spci_call(x);
+#else
 	return spci_call(
 		(struct spci_value){.func = SPCI_RXTX_MAP_32,
 				    .arg1 = send,
 				    .arg2 = recv,
 				    .arg3 = HF_MAILBOX_SIZE / SPCI_PAGE_SIZE});
+#endif
 }
 
 /**
@@ -127,11 +156,20 @@ static inline struct spci_value spci_msg_send(spci_vm_id_t sender_vm_id,
 					      uint32_t size,
 					      uint32_t attributes)
 {
+#if 1
+        struct spci_value x;
+	x.func = SPCI_MSG_SEND_32;
+	x.arg1 = ((uint64_t)sender_vm_id << 16) | target_vm_id;
+	x.arg3 = size;
+	x.arg4 = attributes;
+	return spci_call(x);
+#else
 	return spci_call((struct spci_value){
 		.func = SPCI_MSG_SEND_32,
 		.arg1 = ((uint64_t)sender_vm_id << 16) | target_vm_id,
 		.arg3 = size,
 		.arg4 = attributes});
+#endif
 }
 
 static inline struct spci_value spci_mem_donate(uint32_t fragment_length,

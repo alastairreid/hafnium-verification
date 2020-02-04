@@ -23,6 +23,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+struct fdt_header;
+
 struct fdt_node {
 	const struct fdt_header *hdr;
 	const char *begin;

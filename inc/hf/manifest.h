@@ -52,7 +52,7 @@ struct manifest {
 	struct manifest_vm vm[MAX_VMS];
 };
 
-enum manifest_return_code {
+typedef enum manifest_return_code {
 	MANIFEST_SUCCESS = 0,
 	MANIFEST_ERROR_NO_HYPERVISOR_FDT_NODE,
 	MANIFEST_ERROR_NOT_COMPATIBLE,
@@ -67,9 +67,9 @@ enum manifest_return_code {
 	MANIFEST_ERROR_INTEGER_OVERFLOW,
 	MANIFEST_ERROR_MALFORMED_INTEGER_LIST,
 	MANIFEST_ERROR_MALFORMED_BOOLEAN
-};
+} manifest_return_code;
 
-enum manifest_return_code manifest_init(struct manifest *manifest,
+manifest_return_code manifest_init(struct manifest *manifest,
 					const struct fdt_node *fdt_root);
 
 const char *manifest_strerror(enum manifest_return_code ret_code);

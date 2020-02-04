@@ -129,9 +129,14 @@ struct vm *vm_find(spci_vm_id_t id)
  */
 struct vm_locked vm_lock(struct vm *vm)
 {
+#if 1
+        struct vm_locked locked;
+        locked.vm = vm;
+#else
 	struct vm_locked locked = {
 		.vm = vm,
 	};
+#endif
 
 	sl_lock(&vm->lock);
 

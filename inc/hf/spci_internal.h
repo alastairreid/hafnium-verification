@@ -56,10 +56,12 @@ static inline uint32_t spci_memory_attrs_to_mode(uint16_t memory_attributes)
 	return mode;
 }
 
+#if 0
 static inline struct spci_value spci_error(uint64_t error_code)
 {
 	return (struct spci_value){.func = SPCI_ERROR_32, .arg2 = error_code};
 }
+#endif
 
 struct spci_value spci_msg_handle_architected_message(
 	struct vm_locked to_locked, struct vm_locked from_locked,

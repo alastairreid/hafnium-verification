@@ -28,6 +28,9 @@ void *memmove(void *dst, const void *src, size_t n);
  * if runtime constraint validation fails, assuming that `dest` and `destsz`
  * are both valid.
  */
+#if 1
+#define CHECK_OR_FILL(cond, dest, destsz, ch) assert(cond)
+#else
 #define CHECK_OR_FILL(cond, dest, destsz, ch)                               \
 	do {                                                                \
 		if (!(cond)) {                                              \
@@ -37,6 +40,7 @@ void *memmove(void *dst, const void *src, size_t n);
 			panic("%s failed: " #cond, __func__);               \
 		}                                                           \
 	} while (0)
+#endif
 
 #define CHECK_OR_ZERO_FILL(cond, dest, destsz) \
 	CHECK_OR_FILL(cond, dest, destsz, '\0')

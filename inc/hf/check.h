@@ -18,6 +18,9 @@
 
 #include "hf/panic.h"
 
+#if 1
+#define CHECK assert
+#else
 /**
  * Only use to check assumptions which, if false, mean the system is in a bad
  * state and it is unsafe to continue.
@@ -32,3 +35,4 @@
 			      __LINE__);                                      \
 		}                                                             \
 	} while (0)
+#endif

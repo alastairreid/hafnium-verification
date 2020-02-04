@@ -592,12 +592,13 @@ uint64_t arch_mm_combine_table_entry_attrs(uint64_t table_attrs,
 	return block_attrs;
 }
 
+static const int pa_bits_table[16] = {32, 36, 40, 42, 44, 48};
+	
 /**
  * This is called early in initialization without MMU or caches enabled.
  */
 bool arch_mm_init(paddr_t table)
 {
-	static const int pa_bits_table[16] = {32, 36, 40, 42, 44, 48};
 	uint64_t features = read_msr(id_aa64mmfr0_el1);
 	int pa_bits = pa_bits_table[features & 0xf];
 	int extend_bits;

@@ -19,7 +19,7 @@
 #else
 #define HF_CPU_H
 
-#include "hf/arch/cpu.h"
+// #include "hf/arch/cpu.h"
 #include "hf/arch/types.h"
 #include "hf/spinlock.h"
 #include "hf/addr.h"

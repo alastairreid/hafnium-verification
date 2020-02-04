@@ -30,7 +30,7 @@ void string_init_empty(struct string *str)
  * The constructor checks that it fits into the internal buffer and copies
  * the string there.
  */
-enum string_return_code string_init(struct string *str, const char *data,
+string_return_code string_init(struct string *str, const char *data,
 				    size_t size)
 {
 	/*

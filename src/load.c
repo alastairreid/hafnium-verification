@@ -364,7 +364,7 @@ bool load_vms(struct mm_stage1_locked stage1_locked,
 		      "This will use too much stack, either make "
 		      "MAX_MEM_RANGES smaller or change this.");
 	memcpy_s(mem_ranges_available, sizeof(mem_ranges_available),
-		 params->mem_ranges, sizeof(params->mem_ranges));
+		 params->mem_ranges, MAX_MEM_RANGES * sizeof(struct mem_range));
 
 	/* Round the last addresses down to the page size. */
 	for (i = 0; i < params->mem_ranges_count; ++i) {

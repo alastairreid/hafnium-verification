@@ -108,6 +108,10 @@
 
 /* clang-format on */
 
+#if 1
+#define tlbi(op) do {} while(0)
+#define tlbi_reg(op, reg) do {} while(0)
+#else
 #define tlbi(op)                               \
 	do {                                   \
 		__asm__ volatile("tlbi " #op); \
@@ -116,6 +120,7 @@
 	do {                                                           \
 		__asm__ __volatile__("tlbi " #op ", %0" : : "r"(reg)); \
 	} while (0)
+#endif
 
 /** Mask for the address bits of the pte. */
 #define PTE_ADDR_MASK \
@@ -398,7 +403,7 @@ void arch_mm_flush_dcache(void *base, size_t size)
 	uintptr_t end = (uintptr_t)base + size;
 
 	while (line_begin < end) {
-		__asm__ volatile("dc civac, %0" : : "r"(line_begin));
+		// __asm__ volatile("dc civac, %0" : : "r"(line_begin));
 		line_begin += line_size;
 	}
 	dsb(sy);

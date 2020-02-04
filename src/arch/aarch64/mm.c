@@ -137,7 +137,8 @@ struct arch_mm_config {
 	uintreg_t mair_el2;
 	uintreg_t tcr_el2;
 	uintreg_t sctlr_el2;
-} arch_mm_config;
+};
+struct arch_mm_config arch_mm_config;
 
 static uint8_t mm_s2_max_level;
 static uint8_t mm_s2_root_table_count;

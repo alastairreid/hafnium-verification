@@ -25,6 +25,10 @@ static struct spci_value smc_internal(uint32_t func, uint64_t arg0,
 				      uint64_t arg3, uint64_t arg4,
 				      uint64_t arg5, uint32_t caller_id)
 {
+#if 1
+        struct spci_value r;
+        return r;
+#else
 	register uint64_t r0 __asm__("x0") = func;
 	register uint64_t r1 __asm__("x1") = arg0;
 	register uint64_t r2 __asm__("x2") = arg1;
@@ -48,6 +52,7 @@ static struct spci_value smc_internal(uint32_t func, uint64_t arg0,
 				   .arg5 = r5,
 				   .arg6 = r6,
 				   .arg7 = r7};
+#endif
 }
 
 struct spci_value smc32(uint32_t func, uint32_t arg0, uint32_t arg1,

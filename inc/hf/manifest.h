@@ -25,6 +25,23 @@
 #include "hf/string.h"
 #include "hf/vm.h"
 
+/* Properties specific to the primary VM. */
+struct primary_properties {
+	struct string ramdisk_filename;
+};
+
+/* Properties specific to secondary VMs. */
+struct secondary_properties {
+	uint64_t mem_size;
+	spci_vcpu_count_t vcpu_count;
+};
+
+struct properties {
+	struct primary_properties primary;
+	struct secondary_properties secondary;
+
+};
+
 /**
  * Holds information about one of the VMs described in the manifest.
  */
@@ -33,18 +50,7 @@ struct manifest_vm {
 	struct string debug_name;
 	struct string kernel_filename;
 	struct smc_whitelist smc_whitelist;
-
-	struct {
-		/* Properties specific to the primary VM. */
-		struct {
-			struct string ramdisk_filename;
-		} primary;
-		/* Properties specific to secondary VMs. */
-		struct {
-			uint64_t mem_size;
-			spci_vcpu_count_t vcpu_count;
-		} secondary;
-	} properties;
+	struct properties properties;
 };
 
 /**

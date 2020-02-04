@@ -36,10 +36,11 @@ struct spinlock {
 	volatile uint32_t v;
 };
 
-#define SPINLOCK_INIT ((struct spinlock){.v = 0})
+// #define SPINLOCK_INIT ((struct spinlock){.v = 0})
 
 static inline void sl_lock(struct spinlock *l)
 {
+#if 0
 	register uintreg_t tmp1;
 	register uintreg_t tmp2;
 
@@ -48,17 +49,18 @@ static inline void sl_lock(struct spinlock *l)
 	 * load instruction). Pause using WFE if the lock is currently taken.
 	 * This is NOT guaranteed to make progress.
 	 */
-	__asm__ volatile(
-		"	mov	%w2, #1\n"
-		"	sevl\n" /* set event bit */
-		"1:	wfe\n"  /* wait for event, clear event bit */
-		"2:	ldaxr	%w1, [%3]\n"      /* load lock value */
-		"	cbnz	%w1, 1b\n"	/* if lock taken, goto WFE */
-		"	stxr	%w1, %w2, [%3]\n" /* try to take lock */
-		"	cbnz	%w1, 2b\n"	/* loop if unsuccessful */
-		: "+m"(*l), "=&r"(tmp1), "=&r"(tmp2)
-		: "r"(l)
-		: "cc");
+//	__asm__ volatile(
+//		"	mov	%w2, #1\n"
+//		"	sevl\n" /* set event bit */
+//		"1:	wfe\n"  /* wait for event, clear event bit */
+//		"2:	ldaxr	%w1, [%3]\n"      /* load lock value */
+//		"	cbnz	%w1, 1b\n"	/* if lock taken, goto WFE */
+//		"	stxr	%w1, %w2, [%3]\n" /* try to take lock */
+//		"	cbnz	%w1, 2b\n"	/* loop if unsuccessful */
+//		: "+m"(*l), "=&r"(tmp1), "=&r"(tmp2)
+//		: "r"(l)
+//		: "cc");
+#endif
 }
 
 static inline void sl_unlock(struct spinlock *l)
@@ -67,5 +69,7 @@ static inline void sl_unlock(struct spinlock *l)
 	 * Store zero to lock's value with release semantics. This triggers an
 	 * event which wakes up other threads waiting on a lock (no SEV needed).
 	 */
+#if 0
 	__asm__ volatile("stlr wzr, [%1]" : "=m"(*l) : "r"(l) : "cc");
+#endif
 }

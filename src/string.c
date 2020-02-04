@@ -41,11 +41,11 @@ string_return_code string_init(struct string *str, const char *data,
 		return STRING_ERROR_INVALID_INPUT;
 	}
 
-	if (size > sizeof(str->data)) {
+	if (size > STRING_MAX_SIZE) {
 		return STRING_ERROR_TOO_LONG;
 	}
 
-	memcpy_s(str->data, sizeof(str->data), data, size);
+	memcpy_s(str->data, STRING_MAX_SIZE, data, size);
 	return STRING_SUCCESS;
 }
 

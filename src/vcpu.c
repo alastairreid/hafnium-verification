@@ -26,9 +26,14 @@
  */
 struct vcpu_locked vcpu_lock(struct vcpu *vcpu)
 {
+#if 1
+        struct vcpu_locked locked;
+        locked.vcpu = vcpu;
+#else
 	struct vcpu_locked locked = {
 		.vcpu = vcpu,
 	};
+#endif
 
 	sl_lock(&vcpu->lock);
 

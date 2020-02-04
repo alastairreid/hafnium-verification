@@ -51,9 +51,9 @@ enum vcpu_state {
 
 struct interrupts {
 	/** Bitfield keeping track of which interrupts are enabled. */
-	uint32_t interrupt_enabled[HF_NUM_INTIDS / INTERRUPT_REGISTER_BITS];
+	uint32_t interrupt_enabled[2];
 	/** Bitfield keeping track of which interrupts are pending. */
-	uint32_t interrupt_pending[HF_NUM_INTIDS / INTERRUPT_REGISTER_BITS];
+	uint32_t interrupt_pending[2];
 	/**
 	 * The number of interrupts which are currently both enabled and
 	 * pending. i.e. the number of bits set in interrupt_enable &

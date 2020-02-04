@@ -31,6 +31,6 @@ noreturn void abort(void)
 	/* TODO: Block all CPUs. */
 	for (;;) {
 		/* Prevent loop being optimized away. */
-		__asm__ volatile("nop");
+		// __asm__ volatile("nop");
 	}
 }

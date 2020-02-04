@@ -42,7 +42,7 @@ struct vm *vm_init(spci_vm_id_t id, spci_vcpu_count_t vcpu_count,
 		uint16_t vm_index = id - HF_VM_ID_OFFSET;
 
 		CHECK(id >= HF_VM_ID_OFFSET);
-		CHECK(vm_index < ARRAY_SIZE(vms));
+		CHECK(vm_index < MAX_VMS);
 		vm = &vms[vm_index];
 	}
 

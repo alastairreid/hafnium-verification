@@ -24,10 +24,14 @@
  *   - the shareability domain over which the instruction must operate,
  *   - the accesses for which the instruction operates.
  */
+#if 1
+#define dmb(arg) do {} while(0)
+#else
 #define dmb(arg)                               \
 	do {                                   \
 		__asm__ volatile("dmb " #arg); \
 	} while (0)
+#endif
 
 /**
  * Ensures explicit memory access and management instructions have completed
@@ -35,19 +39,27 @@
  *   - the shareability domain over which the instruction must operate,
  *   - the accesses for which the instruction operates.
  */
+#if 1
+#define dsb(arg) do {} while(0)
+#else
 #define dsb(arg)                               \
 	do {                                   \
 		__asm__ volatile("dsb " #arg); \
 	} while (0)
+#endif
 
 /**
  * Flushes the instruction pipeline so that instructions are fetched from
  * memory.
  */
+#if 1
+#define isb(arg) do {} while(0)
+#else
 #define isb()                            \
 	do {                             \
 		__asm__ volatile("isb"); \
 	} while (0)
+#endif
 
 /** Platform-agnostic API */
 

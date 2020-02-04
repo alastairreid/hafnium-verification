@@ -34,7 +34,7 @@ struct manifest_vm {
 	struct string kernel_filename;
 	struct smc_whitelist smc_whitelist;
 
-	union {
+	struct {
 		/* Properties specific to the primary VM. */
 		struct {
 			struct string ramdisk_filename;
@@ -44,7 +44,7 @@ struct manifest_vm {
 			uint64_t mem_size;
 			spci_vcpu_count_t vcpu_count;
 		} secondary;
-	};
+	} properties;
 };
 
 /**

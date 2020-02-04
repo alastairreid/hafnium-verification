@@ -43,6 +43,8 @@ struct cpio_header {
  */
 static bool cpio_next(struct memiter *iter, const char **name,
 		      const void **contents, size_t *size)
+// requires true;
+// ensures  true;
 {
 	size_t len;
 	struct memiter lit = *iter;

@@ -62,6 +62,8 @@ struct float_reg {
 static_assert(sizeof(struct float_reg) == FLOAT_REG_BYTES,
 	      "Ensure float register type is 128 bits.");
 
+#define MAX_CPUS 1
+
 /*
  * Masks for feature registers trappable by HCR_EL2.TID3.
  */

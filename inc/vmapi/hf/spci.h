@@ -137,6 +137,7 @@ static inline enum spci_memory_##name spci_get_memory_##name##_attr(\
 	return (enum spci_memory_##name)((attr & mask) >> offset);\
 }
 
+#if 0
 LEND_ATTR_FUNCTION_SET(access, SPCI_MEMORY_ACCESS_OFFSET,
 	SPCI_MEMORY_ACCESS_MASK)
 LEND_ATTR_FUNCTION_GET(access, SPCI_MEMORY_ACCESS_OFFSET,
@@ -156,6 +157,7 @@ LEND_ATTR_FUNCTION_SET(shareability, SPCI_MEMORY_SHAREABILITY_OFFSET,
 
 LEND_ATTR_FUNCTION_GET(shareability, SPCI_MEMORY_SHAREABILITY_OFFSET,
 	SPCI_MEMORY_SHAREABILITY_MASK)
+#endif
 
 /* clang-format on */
 

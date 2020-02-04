@@ -15,6 +15,9 @@
  */
 
 // #pragma once
+#ifdef HF_BOOT_PARAMS_H
+#else
+#define HF_BOOT_PARAMS_H
 
 #include <stdbool.h>
 
@@ -47,3 +50,5 @@ struct boot_params_update {
 	paddr_t initrd_begin;
 	paddr_t initrd_end;
 };
+
+#endif

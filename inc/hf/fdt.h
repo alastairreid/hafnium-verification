@@ -15,6 +15,9 @@
  */
 
 // #pragma once
+#ifdef HF_FDT_H
+#else
+#define HF_FDT_H
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -40,3 +43,5 @@ bool fdt_parse_number(const char *data, uint32_t size, uint64_t *value);
 
 void fdt_add_mem_reservation(struct fdt_header *hdr, uint64_t addr,
 			     uint64_t len);
+
+#endif

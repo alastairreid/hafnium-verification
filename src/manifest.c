@@ -36,13 +36,14 @@ static_assert(MAX_VMS <= 99999, "Insufficient VM_NAME_BUF_SIZE");
 static_assert(HF_TEE_VM_ID > MAX_VMS,
 	      "TrustZone VM ID clashes with normal VM range.");
 
+static const char *digits = "0123456789";
+	
 /**
  * Generates a string with the two letters "vm" followed by an integer.
  * Assumes `buf` is of size VM_NAME_BUF_SIZE.
  */
 static const char *generate_vm_node_name(char *buf, spci_vm_id_t vm_id)
 {
-	static const char *digits = "0123456789";
 	char *ptr = buf + VM_NAME_BUF_SIZE;
 
 	*(--ptr) = '\0';

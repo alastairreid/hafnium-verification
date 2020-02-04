@@ -118,6 +118,7 @@ static struct vcpu *api_switch_to_primary(struct vcpu *current,
 	return next;
 }
 
+#if 0
 /**
  * Returns to the primary VM and signals that the vCPU still has work to do so.
  */
@@ -198,7 +199,7 @@ struct vcpu *api_wake_up(struct vcpu *current, struct vcpu *target_vcpu)
 	};
 	return api_switch_to_primary(current, ret, VCPU_STATE_READY);
 }
-
+#endif
 /**
  * Aborts the vCPU and triggers its VM to abort fully.
  */
@@ -223,6 +224,7 @@ struct vcpu *api_abort(struct vcpu *current)
 	return api_switch_to_primary(current, ret, VCPU_STATE_ABORTED);
 }
 
+#if 0
 /**
  * Returns the ID of the VM.
  */
@@ -231,6 +233,7 @@ struct spci_value api_spci_id_get(const struct vcpu *current)
 	return (struct spci_value){.func = SPCI_SUCCESS_32,
 				   .arg2 = current->vm->id};
 }
+#endif
 
 /**
  * Returns the number of VMs configured to run.
@@ -274,6 +277,7 @@ void api_regs_state_saved(struct vcpu *vcpu)
 	sl_unlock(&vcpu->lock);
 }
 
+#if 0
 /**
  * Retrieves the next waiter and removes it from the wait list if the VM's
  * mailbox is in a writable state.
@@ -295,6 +299,7 @@ static struct wait_entry *api_fetch_waiter(struct vm_locked locked_vm)
 	list_remove(&entry->wait_links);
 	return entry;
 }
+#endif
 
 /**
  * Assuming that the arguments have already been checked by the caller, injects
@@ -361,6 +366,7 @@ out:
 	return ret;
 }
 
+#if 0
 /**
  * Constructs an SPCI_MSG_SEND value to return from a successful SPCI_MSG_POLL
  * or SPCI_MSG_WAIT call.
@@ -388,6 +394,7 @@ static struct spci_value spci_msg_recv_return(const struct vm *receiver)
 		return spci_error(SPCI_DENIED);
 	}
 }
+#endif
 
 /**
  * Prepares the vCPU to run by updating its state and fetching whether a return
@@ -610,6 +617,7 @@ static bool api_mode_valid_owned_and_exclusive(uint32_t mode)
 			MM_MODE_SHARED)) == 0;
 }
 
+#if 0
 /**
  * Determines the value to be returned by api_vm_configure and spci_rx_release
  * after they've succeeded. If a secondary VM is running and there are waiters,
@@ -641,6 +649,7 @@ static struct spci_value api_waiter_result(struct vm_locked locked_vm,
 
 	return (struct spci_value){.func = SPCI_SUCCESS_32};
 }
+#endif
 
 /**
  * Configures the hypervisor's stage-1 view of the send and receive pages. The
@@ -905,6 +914,7 @@ static bool msg_receiver_busy(struct vm_locked to, struct vm *from, bool notify)
 	return false;
 }
 
+#if 0
 /**
  * Notifies the `to` VM about the message currently in its mailbox, possibly
  * with the help of the primary VM.
@@ -940,7 +950,9 @@ static void deliver_msg(struct vm_locked to, spci_vm_id_t from_id,
 					      VCPU_STATE_READY);
 	}
 }
+#endif
 
+#if 0
 /**
  * Copies data from the sender's send buffer to the recipient's receive buffer
  * and notifies the recipient.
@@ -1017,6 +1029,7 @@ out:
 
 	return ret;
 }
+#endif
 
 /**
  * Checks whether the vCPU's attempt to block for a message has already been
@@ -1039,6 +1052,7 @@ bool api_spci_msg_recv_block_interrupted(struct vcpu *current)
 	return interrupted;
 }
 
+#if 0
 /**
  * Receives a message from the mailbox. If one isn't available, this function
  * can optionally block the caller until one becomes available.
@@ -1099,7 +1113,9 @@ out:
 
 	return return_code;
 }
+#endif
 
+#if 0
 /**
  * Retrieves the next VM whose mailbox became writable. For a VM to be notified
  * by this function, the caller must have called api_mailbox_send before with
@@ -1514,3 +1530,4 @@ out:
 
 	return ret;
 }
+#endif

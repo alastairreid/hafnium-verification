@@ -15,6 +15,9 @@
  */
 
 //#pragma once
+#ifdef HF_MANIFEST_H
+#else
+#define HF_MANIFEST_H
 
 #include "hf/fdt.h"
 #include "hf/memiter.h"
@@ -73,3 +76,5 @@ manifest_return_code manifest_init(struct manifest *manifest,
 					const struct fdt_node *fdt_root);
 
 const char *manifest_strerror(enum manifest_return_code ret_code);
+
+#endif

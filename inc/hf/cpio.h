@@ -15,6 +15,9 @@
  */
 
 // #pragma once
+#ifdef HF_CPIO_H
+#else
+#define HF_CPIO_H
 
 #include <stdbool.h>
 
@@ -23,3 +26,5 @@
 
 bool cpio_get_file(const struct memiter *cpio, const struct string *name,
 		   struct memiter *it);
+
+#endif

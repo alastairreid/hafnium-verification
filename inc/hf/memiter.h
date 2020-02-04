@@ -15,6 +15,9 @@
  */
 
 //#pragma once
+#ifdef HF_MEMITER_H
+#else
+#define HF_MEMITER_H
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -33,3 +36,5 @@ bool memiter_advance(struct memiter *it, size_t v);
 
 const void *memiter_base(const struct memiter *it);
 size_t memiter_size(const struct memiter *it);
+
+#endif

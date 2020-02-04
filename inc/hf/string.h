@@ -15,6 +15,9 @@
  */
 
 //#pragma once
+#ifdef HF_STRING_H
+#else
+#define HF_STRING_H
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -53,3 +56,5 @@ string_return_code string_init(struct string *str, const char *data,
 void string_init_empty(struct string *str);
 bool string_is_empty(const struct string *str);
 const char *string_data(const struct string *str);
+
+#endif

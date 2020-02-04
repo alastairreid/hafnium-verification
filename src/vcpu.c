@@ -52,7 +52,7 @@ void vcpu_unlock(struct vcpu_locked *locked)
 
 void vcpu_init(struct vcpu *vcpu, struct vm *vm)
 {
-	memset_s(vcpu, sizeof(*vcpu), 0, sizeof(*vcpu));
+	memset_s(vcpu, sizeof(struct vcpu), 0, sizeof(struct vcpu));
 	sl_init(&vcpu->lock);
 	vcpu->regs_available = true;
 	vcpu->vm = vm;

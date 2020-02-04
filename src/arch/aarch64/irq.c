@@ -20,10 +20,10 @@
 
 void arch_irq_disable(void)
 {
-	__asm__ volatile("msr DAIFSet, #0xf");
+	// __asm__ volatile("msr DAIFSet, #0xf");
 }
 
 void arch_irq_enable(void)
 {
-	__asm__ volatile("msr DAIFClr, #0xf");
+	// __asm__ volatile("msr DAIFClr, #0xf");
 }

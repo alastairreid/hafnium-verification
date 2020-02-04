@@ -46,7 +46,7 @@ struct vm *vm_init(spci_vm_id_t id, spci_vcpu_count_t vcpu_count,
 		vm = &vms[vm_index];
 	}
 
-	memset_s(vm, sizeof(*vm), 0, sizeof(*vm));
+	memset_s(vm, sizeof(struct vm), 0, sizeof(struct vm));
 
 	list_init(&vm->mailbox.waiter_list);
 	list_init(&vm->mailbox.ready_list);

@@ -38,9 +38,14 @@
 
 #include "vmapi/hf/call.h"
 
+#if 1
+alignas(alignof(
+	struct mm_page_table)) char ptable_buf[4096];
+#else
 alignas(alignof(
 	struct mm_page_table)) char ptable_buf[sizeof(struct mm_page_table) *
 					       HEAP_PAGES];
+#endif
 
 static struct mpool ppool;
 

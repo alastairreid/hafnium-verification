@@ -25,11 +25,11 @@
  */
 #define STRING_MAX_SIZE 32
 
-enum string_return_code {
+typedef enum string_return_code {
 	STRING_SUCCESS,
 	STRING_ERROR_INVALID_INPUT,
 	STRING_ERROR_TOO_LONG
-};
+} string_return_code;
 
 /**
  * Statically-allocated string data structure with input validation to ensure

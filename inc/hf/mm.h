@@ -33,7 +33,8 @@
 /* clang-format off */
 
 #define PAGE_SIZE (1 << PAGE_BITS)
-#define MM_PTE_PER_PAGE (PAGE_SIZE / sizeof(pte_t))
+//#define MM_PTE_PER_PAGE (PAGE_SIZE / sizeof(pte_t))
+#define MM_PTE_PER_PAGE 512
 
 /* The following are arch-independent page mapping modes. */
 #define MM_MODE_R UINT32_C(0x0001) /* read */

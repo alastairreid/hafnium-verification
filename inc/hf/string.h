@@ -48,7 +48,7 @@ struct string {
  */
 #define STRING_INIT(str) ((struct string){.data = str})
 
-enum string_return_code string_init(struct string *str, const char *data,
+string_return_code string_init(struct string *str, const char *data,
 				    size_t size);
 void string_init_empty(struct string *str);
 bool string_is_empty(const struct string *str);

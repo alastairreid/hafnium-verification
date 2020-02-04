@@ -30,7 +30,7 @@
  *
  * TODO: initialize to a random value at boot.
  */
-uint64_t __attribute__((used)) __stack_chk_guard = 0x72afaf72bad0feed;
+uint64_t /*__attribute__((used))*/ __stack_chk_guard = 0x72afaf72bad0feed;
 
 /**
  * Called when the stack canary is invalid. The stack can no longer be trusted

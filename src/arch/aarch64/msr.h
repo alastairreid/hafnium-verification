@@ -15,6 +15,9 @@
  */
 
 //#pragma once
+#ifdef ARCH_AARCH64_MSR_H
+#else
+#define ARCH_AARCH64_MSR_H
 
 #include <stddef.h>
 
@@ -68,3 +71,5 @@
  * This register enables and disables LORegions (Armv8.1).
  */
 #define MSR_LORC_EL1 S3_0_C10_C4_3
+
+#endif

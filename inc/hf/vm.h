@@ -23,7 +23,7 @@
 
 #include "hf/arch/types.h"
 
-#include "hf/cpu.h"
+#include "hf/vcpu.h"
 #include "hf/list.h"
 #include "hf/mm.h"
 #include "hf/mpool.h"

@@ -138,14 +138,15 @@ static void print_string(const char *str, const char *suffix, size_t width,
 	print_raw_string(suffix);
 }
 
+static const char *digits_lower = "0123456789abcdefx";
+static const char *digits_upper = "0123456789ABCDEFX";
+
 /**
  * Prints a number to the debug log. The caller specifies the base, its minimum
  * width and printf-style flags.
  */
 static void print_num(size_t v, size_t base, size_t width, int flags)
 {
-	static const char *digits_lower = "0123456789abcdefx";
-	static const char *digits_upper = "0123456789ABCDEFX";
 	const char *d = (flags & FLAG_UPPER) ? digits_upper : digits_lower;
 	char buf[DLOG_MAX_STRING_LENGTH];
 	char *ptr = &buf[sizeof(buf) - 1];

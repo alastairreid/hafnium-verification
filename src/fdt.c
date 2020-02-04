@@ -75,7 +75,7 @@ static void fdt_tokenizer_align(struct fdt_tokenizer *t)
 
 static bool fdt_tokenizer_uint32(struct fdt_tokenizer *t, uint32_t *res)
 {
-	const char *next = t->cur + sizeof(*res);
+	const char *next = t->cur + sizeof(uint32_t);
 
 	if (next > t->end) {
 		return false;
@@ -140,7 +140,7 @@ bool fdt_root_node(struct fdt_node *node, const struct fdt_header *hdr)
 	uint32_t begin = be32toh(hdr->off_dt_struct);
 	uint32_t size = be32toh(hdr->size_dt_struct);
 
-	memset_s(node, sizeof(*node), 0, sizeof(*node));
+	memset_s(node, sizeof(struct fdt_node), 0, sizeof(struct fdt_node));
 
 	/* Check the magic number before anything else. */
 	if (hdr->magic != be32toh(FDT_MAGIC)) {

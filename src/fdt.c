@@ -46,7 +46,7 @@ enum fdt_token {
 	FDT_END_NODE = 2,
 	FDT_PROP = 3,
 	FDT_NOP = 4,
-	FDT_END = 9,
+	FDT_END = 9
 };
 
 struct fdt_tokenizer {

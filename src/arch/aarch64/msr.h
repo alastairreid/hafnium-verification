@@ -34,22 +34,30 @@
  * Reads a system register, supported by the current assembler, and returns the
  * result.
  */
+#if 1
+#define read_msr(name) 0
+#else
 #define read_msr(name)                                              \
 	__extension__({                                             \
 		uintreg_t __v;                                      \
 		__asm__ volatile("mrs %0, " str(name) : "=r"(__v)); \
 		__v;                                                \
 	})
+#endif
 
 /**
  * Writes the value to the system register, supported by the current assembler.
  */
+#if 1
+#define write_msr(name, value) do {} while(0)
+#else
 #define write_msr(name, value)                                \
 	__extension__({                                       \
 		__asm__ volatile("msr " str(name) ", %x0"     \
 				 :                            \
 				 : "rZ"((uintreg_t)(value))); \
 	})
+#endif
 
 /*
  * Encodings for registers supported after Armv8.0.

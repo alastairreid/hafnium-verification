@@ -26,10 +26,10 @@
 extern size_t dlog_buffer_offset;
 extern char dlog_buffer[];
 
-#if DEBUG
+#if 1
 void dlog_enable_lock(void);
 void dlog(const char *fmt, ...);
-void vdlog(const char *fmt, va_list args);
+//void vdlog(const char *fmt, va_list args);
 #else
 #define dlog_enable_lock()
 #define dlog(...)

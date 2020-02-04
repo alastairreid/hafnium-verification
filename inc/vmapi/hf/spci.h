@@ -296,7 +296,7 @@ struct spci_memory_region {
 	 * Each one specifies an endpoint and the attributes with which this
 	 * memory region should be mapped in that endpoint's page table.
 	 */
-	struct spci_memory_region_attributes attributes[];
+        struct spci_memory_region_attributes attributes[1];
 };
 
 /**

@@ -34,7 +34,9 @@
  * happen, there may be coherency problems when the stack is being used before
  * caching is enabled.
  */
-alignas(PAGE_SIZE) static char callstacks[MAX_CPUS][STACK_SIZE];
+// alignas(PAGE_SIZE) static char callstacks[MAX_CPUS][STACK_SIZE];
+#define ALL_STACK_SIZE 16384
+alignas(PAGE_SIZE) static char callstacks[ALL_STACK_SIZE];
 
 /* NOLINTNEXTLINE(misc-redundant-expression) */
 static_assert((STACK_SIZE % PAGE_SIZE) == 0, "Keep each stack page aligned.");
@@ -50,7 +52,9 @@ static_assert((PAGE_SIZE % STACK_ALIGN) == 0,
  * spci_msg_send. The information stored in the buffer is only valid during the
  * spci_msg_send request is performed.
  */
-alignas(PAGE_SIZE) static uint8_t cpu_message_buffer[MAX_CPUS][PAGE_SIZE];
+// alignas(PAGE_SIZE) static uint8_t cpu_message_buffer[MAX_CPUS][PAGE_SIZE];
+#define ALL_MSG_BUF_SIZE 16384
+alignas(PAGE_SIZE) static uint8_t cpu_message_buffer[ALL_MSG_BUF_SIZE];
 
 uint8_t *cpu_get_buffer(struct cpu *c)
 {
@@ -67,15 +71,18 @@ uint32_t cpu_get_buffer_size(struct cpu *c)
 
 	CHECK(cpu_indx < MAX_CPUS);
 
-	return sizeof(cpu_message_buffer[cpu_indx]);
+	//return sizeof(cpu_message_buffer[cpu_indx]);
+	return PAGE_SIZE;
 }
 
 /* State of all supported CPUs. The stack of the first one is initialized. */
 struct cpu cpus[MAX_CPUS] = {
+#if 0
 	{
 		.is_on = 1,
 		.stack_bottom = &callstacks[0][STACK_SIZE],
 	},
+#endif
 };
 
 static uint32_t cpu_count = 1;

@@ -18,13 +18,23 @@
 
 #include "hf/std.h"
 
+extern uint8_t text_begin[];
+extern uint8_t text_end[];
+extern uint8_t rodata_begin[];
+extern uint8_t rodata_end[];
+extern uint8_t data_begin[];
+extern uint8_t data_end[];
+extern uint8_t initrd_begin[];
+extern uint8_t initrd_end[];
+extern uint8_t fdt_begin[];
+extern uint8_t fdt_end[];
+extern uint8_t image_end[];
+
 /**
  * Get the address the .text section begins at.
  */
 paddr_t layout_text_begin(void)
 {
-	extern uint8_t text_begin[];
-
 	return pa_init((uintpaddr_t)text_begin);
 }
 
@@ -33,8 +43,6 @@ paddr_t layout_text_begin(void)
  */
 paddr_t layout_text_end(void)
 {
-	extern uint8_t text_end[];
-
 	return pa_init((uintpaddr_t)text_end);
 }
 
@@ -43,8 +51,6 @@ paddr_t layout_text_end(void)
  */
 paddr_t layout_rodata_begin(void)
 {
-	extern uint8_t rodata_begin[];
-
 	return pa_init((uintpaddr_t)rodata_begin);
 }
 
@@ -53,8 +59,6 @@ paddr_t layout_rodata_begin(void)
  */
 paddr_t layout_rodata_end(void)
 {
-	extern uint8_t rodata_end[];
-
 	return pa_init((uintpaddr_t)rodata_end);
 }
 
@@ -63,8 +67,6 @@ paddr_t layout_rodata_end(void)
  */
 paddr_t layout_data_begin(void)
 {
-	extern uint8_t data_begin[];
-
 	return pa_init((uintpaddr_t)data_begin);
 }
 
@@ -73,8 +75,6 @@ paddr_t layout_data_begin(void)
  */
 paddr_t layout_data_end(void)
 {
-	extern uint8_t data_end[];
-
 	return pa_init((uintpaddr_t)data_end);
 }
 
@@ -83,8 +83,6 @@ paddr_t layout_data_end(void)
  */
 paddr_t layout_initrd_begin(void)
 {
-	extern uint8_t initrd_begin[];
-
 	return pa_init((uintpaddr_t)initrd_begin);
 }
 
@@ -93,8 +91,6 @@ paddr_t layout_initrd_begin(void)
  */
 paddr_t layout_initrd_end(void)
 {
-	extern uint8_t initrd_end[];
-
 	return pa_init((uintpaddr_t)initrd_end);
 }
 
@@ -103,8 +99,6 @@ paddr_t layout_initrd_end(void)
  */
 paddr_t layout_fdt_begin(void)
 {
-	extern uint8_t fdt_begin[];
-
 	return pa_init((uintpaddr_t)fdt_begin);
 }
 
@@ -113,8 +107,6 @@ paddr_t layout_fdt_begin(void)
  */
 paddr_t layout_fdt_end(void)
 {
-	extern uint8_t fdt_end[];
-
 	return pa_init((uintpaddr_t)fdt_end);
 }
 
@@ -123,8 +115,6 @@ paddr_t layout_fdt_end(void)
  */
 paddr_t layout_image_end(void)
 {
-	extern uint8_t image_end[];
-
 	return pa_init((uintpaddr_t)image_end);
 }
 

@@ -109,6 +109,8 @@ struct smc_whitelist {
 	bool permissive;
 };
 
+#define MAX_CPUS 1
+#define MAX_VMS  16
 struct vm {
 	spci_vm_id_t id;
 	struct smc_whitelist smc_whitelist;

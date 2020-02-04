@@ -27,9 +27,15 @@
  * TODO: Should this also reset the system?
  */
 noreturn void abort(void)
+//@ requires true;
+//@ ensures false;
+//@ terminates;
 {
 	/* TODO: Block all CPUs. */
-	for (;;) {
+	//@ assume(false);  // TODO: I am not sure that this counts as a proof!
+	for (;;)
+	//@ invariant false;
+	{
 		/* Prevent loop being optimized away. */
 		// __asm__ volatile("nop");
 	}

@@ -23,6 +23,8 @@
 #include "hf/spinlock.h"
 
 #include "vmapi/hf/spci.h"
+struct cpu;
+struct vm;
 
 /** The number of bits in each element of the interrupt bitfields. */
 #define INTERRUPT_REGISTER_BITS 32

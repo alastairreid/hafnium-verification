@@ -16,7 +16,7 @@
 
 #include "hf/api.h"
 
-#include "hf/arch/cpu.h"
+//#include "hf/arch/cpu.h"
 #include "hf/arch/timer.h"
 
 #include "hf/check.h"

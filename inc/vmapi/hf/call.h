@@ -172,6 +172,7 @@ static inline struct spci_value spci_msg_send(spci_vm_id_t sender_vm_id,
 #endif
 }
 
+#if 0
 static inline struct spci_value spci_mem_donate(uint32_t fragment_length,
 						uint32_t length,
 						uint32_t cookie)
@@ -366,5 +367,6 @@ static inline struct spci_value spci_features(uint32_t function_id)
 	return spci_call((struct spci_value){.func = SPCI_FEATURES_32,
 					     .arg1 = function_id});
 }
+#endif
 
 #endif

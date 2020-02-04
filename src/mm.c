@@ -961,7 +961,13 @@ bool mm_vm_get_mode(struct mm_ptable *t, ipaddr_t begin, ipaddr_t end,
 
 static struct mm_stage1_locked mm_stage1_lock_unsafe(void)
 {
+#if 1
+        struct mm_stage1_locked r;
+        r.ptable = &ptable;
+        return r;
+#else
 	return (struct mm_stage1_locked){.ptable = &ptable};
+#endif
 }
 
 struct mm_stage1_locked mm_lock_stage1(void)

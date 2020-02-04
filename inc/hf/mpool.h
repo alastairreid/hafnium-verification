@@ -24,6 +24,9 @@
 
 #include "hf/spinlock.h"
 
+struct mpool_chunk;
+struct mpool_entry;
+
 struct mpool {
 	struct spinlock lock;
 	size_t entry_size;

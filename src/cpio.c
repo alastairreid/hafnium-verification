@@ -20,7 +20,7 @@
 
 #include "hf/std.h"
 
-#pragma pack(push, 1)
+//#pragma pack(push, 1)
 struct cpio_header {
 	uint16_t magic;
 	uint16_t dev;
@@ -34,7 +34,7 @@ struct cpio_header {
 	uint16_t namesize;
 	uint16_t filesize[2];
 };
-#pragma pack(pop)
+//#pragma pack(pop)
 
 /**
  * Retrieves the next file stored in the cpio archive stored in the cpio, and

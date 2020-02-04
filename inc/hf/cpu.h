@@ -20,6 +20,9 @@
 #define HF_CPU_H
 
 #include "hf/arch/cpu.h"
+#include "hf/arch/types.h"
+#include "hf/spinlock.h"
+#include "hf/addr.h"
 
 /* TODO: Fix alignment such that `cpu` structs are in different cache lines. */
 struct cpu {

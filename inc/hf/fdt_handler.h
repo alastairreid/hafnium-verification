@@ -24,13 +24,29 @@
 struct fdt_header *fdt_map(struct mm_stage1_locked stage1_locked,
 			   paddr_t fdt_addr, struct fdt_node *n,
 			   struct mpool *ppool);
+	//@ requires true;
+	//@ ensures  true;
+
 bool fdt_unmap(struct mm_stage1_locked stage1_locked, struct fdt_header *fdt,
 	       struct mpool *ppool);
+	//@ requires true;
+	//@ ensures  true;
+
 bool fdt_find_cpus(const struct fdt_node *root, cpu_id_t *cpu_ids,
 		   size_t *cpu_count);
+	//@ requires true;
+	//@ ensures  true;
+
 bool fdt_find_memory_ranges(const struct fdt_node *root, struct boot_params *p);
+	//@ requires true;
+	//@ ensures  true;
+
 bool fdt_find_initrd(const struct fdt_node *root, paddr_t *begin, paddr_t *end);
+	//@ requires true;
+	//@ ensures  true;
 
 /** Apply an update to the FDT. */
 bool fdt_patch(struct mm_stage1_locked stage1_locked, paddr_t fdt_addr,
 	       struct boot_params_update *p, struct mpool *ppool);
+	//@ requires true;
+	//@ ensures  true;

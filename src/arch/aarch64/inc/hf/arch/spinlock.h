@@ -36,11 +36,28 @@ struct spinlock {
 	volatile uint32_t v;
 };
 
+/*@
+predicate spinlock(struct spinlock *l, predicate() p;) =
+    l->v |-> _
+    ;
+
+predicate spinlock_held(struct spinlock *l, predicate() p, real frac) =
+    l->v |-> ?v
+    &*& v != 0
+    ;
+// todo: should have a thread id too
+
+predicate create_spinlock_ghost_arg(predicate() p) = true;
+
+@*/
+
 // #define SPINLOCK_INIT ((struct spinlock){.v = 0})
 
-static inline void sl_lock(struct spinlock *l)
-{
+static inline void sl_lock(struct spinlock *l);
+	//@ requires [?f]spinlock(l, ?p);
+	//@ ensures  spinlock_held(l, p, f) &*& p();
 #if 0
+{
 	register uintreg_t tmp1;
 	register uintreg_t tmp2;
 
@@ -60,16 +77,18 @@ static inline void sl_lock(struct spinlock *l)
 //		: "+m"(*l), "=&r"(tmp1), "=&r"(tmp2)
 //		: "r"(l)
 //		: "cc");
-#endif
 }
+#endif
 
-static inline void sl_unlock(struct spinlock *l)
+static inline void sl_unlock(struct spinlock *l);
+	//@ requires spinlock_held(l, ?p, ?f) &*& p();
+	//@ ensures  [f]spinlock(l, p);
+#if 0
 {
 	/*
 	 * Store zero to lock's value with release semantics. This triggers an
 	 * event which wakes up other threads waiting on a lock (no SEV needed).
 	 */
-#if 0
 	__asm__ volatile("stlr wzr, [%1]" : "=m"(*l) : "r"(l) : "cc");
-#endif
 }
+#endif

@@ -66,12 +66,18 @@ static void mpool_unlock(struct mpool *p)
  * size.
  */
 void mpool_init(struct mpool *p, size_t entry_size)
+	//@ requires mpool_struct(p);
+	//@ ensures mpool_invariant(p)();
 {
+	//@ open mpool_struct(p);
 	p->entry_size = entry_size;
 	p->chunk_list = NULL;
 	p->entry_list = NULL;
 	p->fallback = NULL;
+	//@ close spinlock(&p->lock, mpool_invariant(p));
+	//@ close create_spinlock_ghost_arg(mpool_invariant(p));
 	sl_init(&p->lock);
+	//@ close mpool_invariant(p)();
 }
 
 /**
@@ -155,6 +161,8 @@ void mpool_fini(struct mpool *p)
  * if none of the buffer was usable in the pool.
  */
 bool mpool_add_chunk(struct mpool *p, void *begin, size_t size)
+//@ requires true;
+//@ ensures false;
 {
 	struct mpool_chunk *chunk;
 	uintptr_t new_begin;

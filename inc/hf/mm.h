@@ -98,6 +98,11 @@ struct mm_ptable {
 	paddr_t root;
 };
 
+/*@
+predicate mm_ptable(struct mm_ptable *ptable) =
+	true;
+@*/
+
 /** The type of addresses stored in the page table. */
 typedef uintvaddr_t ptable_addr_t;
 
@@ -105,6 +110,11 @@ typedef uintvaddr_t ptable_addr_t;
 struct mm_stage1_locked {
 	struct mm_ptable *ptable;
 };
+
+/*@
+predicate mm_stage1_locked(struct mm_stage1_locked *stage) =
+	mm_ptable(stage->ptable);
+@*/
 
 void mm_vm_enable_invalidation(void);
 
@@ -126,16 +136,31 @@ void mm_vm_dump(struct mm_ptable *t);
 bool mm_vm_get_mode(struct mm_ptable *t, ipaddr_t begin, ipaddr_t end,
 		    uint32_t *mode);
 
-struct mm_stage1_locked mm_lock_stage1(void);
+// Result type changed to avoid taking address of result
+struct mm_ptable *mm_lock_stage1(void);
+	//@ requires true;
+	//@ ensures mm_ptable(result);
+
 void mm_unlock_stage1(struct mm_stage1_locked *lock);
+	//@ requires mm_ptable(lock->ptable);
+	//@ ensures true;
+
 void *mm_identity_map(struct mm_stage1_locked stage1_locked, paddr_t begin,
 		      paddr_t end, uint32_t mode, struct mpool *ppool);
+	//@ requires true;
+	//@ ensures true;
+
 bool mm_unmap(struct mm_stage1_locked stage1_locked, paddr_t begin, paddr_t end,
 	      struct mpool *ppool);
+	//@ requires true;
+	//@ ensures true;
+
 void mm_defrag(struct mm_stage1_locked stage1_locked, struct mpool *ppool);
+	//@ requires true;
+	//@ ensures true;
 
 bool mm_init(struct mpool *ppool);
-//@ requires true;
-//@ ensures true;
+	//@ requires mpool(ppool);
+	//@ ensures mpool(ppool);
 
 #endif

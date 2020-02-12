@@ -37,12 +37,12 @@ struct mpool {
 
 /*@
 
-predicate mpool_struct(struct mpool *p) =
+// An unitialized mpool has these fields
+predicate mpool_raw(struct mpool *p;) =
     p->entry_size     |-> _
     &*& p->chunk_list |-> _
     &*& p->entry_list |-> _
     &*& p->fallback   |-> _
-    &*& spinlock(&p->lock, _)
     ;
 
 predicate_ctor mpool_invariant(struct mpool *p)() =
@@ -52,21 +52,45 @@ predicate_ctor mpool_invariant(struct mpool *p)() =
     &*& p->fallback   |-> 0
     &*& spinlock(&p->lock, _)
     ;
+
+predicate mpool(struct mpool *p) = mpool_invariant(p)();
+
 @*/
 
 void mpool_enable_locks(void);
+	//@ requires true;
+	//@ ensures true;
+
 void mpool_init(struct mpool *p, size_t entry_size);
-	//@ requires mpool_struct(p);
-	//@ ensures mpool_invariant(p)();
+	//@ requires mpool_raw(p);
+	//@ ensures mpool(p);
 
 void mpool_init_from(struct mpool *p, struct mpool *from);
+	//@ requires true;
+	//@ ensures true;
+
 void mpool_init_with_fallback(struct mpool *p, struct mpool *fallback);
+	//@ requires true;
+	//@ ensures true;
+
 void mpool_fini(struct mpool *p);
+	//@ requires true;
+	//@ ensures true;
+
 bool mpool_add_chunk(struct mpool *p, void *begin, size_t size);
 	//@ requires true;
 	//@ ensures true;
 
 void *mpool_alloc(struct mpool *p);
+	//@ requires true;
+	//@ ensures true;
+
 void *mpool_alloc_contiguous(struct mpool *p, size_t count, size_t align);
+	//@ requires true;
+	//@ ensures true;
+
 void mpool_free(struct mpool *p, void *ptr);
+	//@ requires true;
+	//@ ensures true;
+
 #endif

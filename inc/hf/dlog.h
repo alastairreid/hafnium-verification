@@ -29,6 +29,9 @@ extern char dlog_buffer[];
 #if 1
 void dlog_enable_lock(void);
 void dlog(const char *fmt, ...);
+//@ requires true;
+//@ ensures true;
+
 //void vdlog(const char *fmt, va_list args);
 #else
 #define dlog_enable_lock()

@@ -21,6 +21,8 @@
 
 /** Initialises the console hardware. */
 void plat_console_init(void);
+//@ requires true;
+//@ ensures  true;
 
 /** Initialises any memory mappings that the console driver needs. */
 void plat_console_mm_init(struct mm_stage1_locked stage1_locked,

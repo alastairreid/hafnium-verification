@@ -19,3 +19,6 @@
 #include <stdnoreturn.h>
 
 noreturn void panic(const char *fmt, ...);
+//@ requires true;
+//@ ensures false;
+

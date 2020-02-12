@@ -23,3 +23,5 @@
  * possible.
  */
 void arch_one_time_init(void);
+	//@ requires true;
+	//@ ensures  true;

@@ -57,6 +57,8 @@ static struct mpool ppool;
  * code.
  */
 void one_time_init_mm(void)
+	//@ requires mpool_raw(&ppool);
+	//@ ensures mpool(&ppool);
 {
 	/* Make sure the console is initialised before calling dlog. */
 	plat_console_init();
@@ -64,7 +66,7 @@ void one_time_init_mm(void)
 	dlog("Initialising hafnium\n");
 
 	mpool_init(&ppool, sizeof(struct mm_page_table));
-	mpool_add_chunk(&ppool, ptable_buf, sizeof(ptable_buf));
+	mpool_add_chunk(&ppool, ptable_buf, 65536);
 
 	if (!mm_init(&ppool)) {
 		panic("mm_init failed");
@@ -75,6 +77,8 @@ void one_time_init_mm(void)
  * Performs one-time initialisation of the hypervisor.
  */
 void one_time_init(void)
+	//@ requires mpool(&ppool);
+	//@ ensures  true;
 {
 	struct fdt_header *fdt;
 	struct fdt_node fdt_root;

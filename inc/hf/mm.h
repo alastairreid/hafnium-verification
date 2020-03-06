@@ -136,8 +136,7 @@ void mm_vm_dump(struct mm_ptable *t);
 bool mm_vm_get_mode(struct mm_ptable *t, ipaddr_t begin, ipaddr_t end,
 		    uint32_t *mode);
 
-// Result type changed to avoid taking address of result
-struct mm_ptable *mm_lock_stage1(void);
+struct mm_stage1_locked *mm_lock_stage1(void);
 	//@ requires true;
 	//@ ensures mm_ptable(result);
 

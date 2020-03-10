@@ -37,9 +37,10 @@ struct spinlock {
 };
 
 /*@
-predicate spinlock(struct spinlock *l, predicate() p;) =
-    l->v |-> _
-    ;
+predicate spinlock(struct spinlock *l;) =
+	l == 0 ? true
+	: l->v |-> _
+	;
 
 predicate spinlock_held(struct spinlock *l, predicate() p, real frac) =
     l->v |-> ?v
@@ -54,8 +55,8 @@ predicate create_spinlock_ghost_arg(predicate() p) = true;
 // #define SPINLOCK_INIT ((struct spinlock){.v = 0})
 
 static inline void sl_lock(struct spinlock *l);
-	//@ requires [?f]spinlock(l, ?p);
-	//@ ensures  spinlock_held(l, p, f) &*& p();
+	//@ requires true; //[?f]spinlock(l, ?p);
+	//@ ensures  true; //spinlock_held(l, p, f) &*& p();
 #if 0
 {
 	register uintreg_t tmp1;
@@ -82,7 +83,7 @@ static inline void sl_lock(struct spinlock *l);
 
 static inline void sl_unlock(struct spinlock *l);
 	//@ requires spinlock_held(l, ?p, ?f) &*& p();
-	//@ ensures  [f]spinlock(l, p);
+	//@ ensures  true; //[f]spinlock(l, p);
 #if 0
 {
 	/*

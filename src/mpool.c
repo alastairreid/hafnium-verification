@@ -22,10 +22,39 @@ struct mpool_chunk {
 	struct mpool_chunk *next_chunk;
 	struct mpool_chunk *limit;
 };
+/*@
+predicate mpool_chunk_raw(struct mpool_chunk* chunk;) =
+  chunk == 0 ? true
+  : chunk->next_chunk |-> ?next
+    &*& chunk->limit  |-> ?limit
+    ;
+
+predicate mpool_chunk(struct mpool_chunk* chunk; int length) =
+  chunk == 0 ? length == 0
+  : length > 0
+    &*& chunk->next_chunk |-> ?next
+    &*& chunk->limit      |-> ?limit
+    &*& mpool_chunk(next, ?nextLength)
+    &*& length == nextLength + 1
+  ;
+@*/
+
 
 struct mpool_entry {
 	struct mpool_entry *next;
 };
+/*@
+predicate mpool_entry_raw(struct mpool_entry* entry;) =
+  entry == 0 ? true : entry->next |-> ?next;
+
+predicate mpool_entry(struct mpool_entry* entry; int length) =
+  entry == 0 ? length == 0
+  : length > 0
+    &*& entry->next |-> ?next
+    &*& mpool_entry(next, ?nextLength)
+    &*& length == nextLength + 1
+  ;
+@*/
 
 static bool mpool_locks_enabled = false;
 
@@ -34,7 +63,10 @@ static bool mpool_locks_enabled = false;
  * the locks are disabled, that is, acquiring/releasing them is a no-op.
  */
 void mpool_enable_locks(void)
+	//@ requires true;
+	//@ ensures true;
 {
+	//@ assume(false);	
 	mpool_locks_enabled = true;
 }
 
@@ -42,17 +74,24 @@ void mpool_enable_locks(void)
  * Acquires the lock protecting the given memory pool, if locks are enabled.
  */
 static void mpool_lock(struct mpool *p)
+	//@ requires p != 0 &*& mpool(p, ?cs, ?es, ?fb);
+	//@ ensures mpool(p, cs, es, fb);
 {
+	//@ assume(false);
 	if (mpool_locks_enabled) {
 		sl_lock(&p->lock);
 	}
+	//@ leak [_]mpool(fb, _, _, _);
 }
 
 /**
  * Releases the lock protecting the given memory pool, if locks are enabled.
  */
 static void mpool_unlock(struct mpool *p)
+	//@ requires p != 0 &*& mpool(p, ?cs, ?es, ?fb);
+	//@ ensures mpool(p, cs, es, fb);
 {
+	//@ assume(false);
 	if (mpool_locks_enabled) {
 		sl_unlock(&p->lock);
 	}
@@ -66,18 +105,14 @@ static void mpool_unlock(struct mpool *p)
  * size.
  */
 void mpool_init(struct mpool *p, size_t entry_size)
-	//@ requires mpool_struct(p);
-	//@ ensures mpool_invariant(p)();
+	//@ requires p != 0 &*& mpool_raw(p) &*& entry_size >= 2*sizeof(void*);
+	//@ ensures mpool(p, 0, 0, NULL);
 {
-	//@ open mpool_struct(p);
 	p->entry_size = entry_size;
 	p->chunk_list = NULL;
 	p->entry_list = NULL;
 	p->fallback = NULL;
-	//@ close spinlock(&p->lock, mpool_invariant(p));
-	//@ close create_spinlock_ghost_arg(mpool_invariant(p));
-	sl_init(&p->lock);
-	//@ close mpool_invariant(p)();
+//	sl_init(&p->lock);
 }
 
 /**
@@ -86,8 +121,19 @@ void mpool_init(struct mpool *p, size_t entry_size)
  * and making them available via the new memory pool.
  */
 void mpool_init_from(struct mpool *p, struct mpool *from)
+	/*@
+	requires p != 0
+		&*& mpool_raw(p)
+		&*& from != 0
+		&*& mpool(from, ?cs, ?es, ?fb)
+	;
+	@*/
+	//@ ensures mpool(p, cs, es, fb) &*& mpool(from, 0, 0, NULL);
 {
 	mpool_init(p, from->entry_size);
+	//@ open mpool(p, 0 ,0, NULL);
+	//@ open mpool_chunk(p->chunk_list, 0);
+	//@ open mpool_entry(p->entry_list, 0);
 
 	mpool_lock(from);
 	p->chunk_list = from->chunk_list;
@@ -105,6 +151,14 @@ void mpool_init_from(struct mpool *p, struct mpool *from)
  * runs out of memory.
  */
 void mpool_init_with_fallback(struct mpool *p, struct mpool *fallback)
+	/*@
+	requires p != 0
+		&*& mpool_raw(p)
+		&*& fallback != 0
+		&*& [_]mpool(fallback, ?cs, ?es, ?fb)
+	;
+	@*/
+	//@ ensures mpool(p, 0, 0, fallback) &*& [_]mpool(fallback, cs, es, fb);
 {
 	mpool_init(p, fallback->entry_size);
 	p->fallback = fallback;
@@ -115,6 +169,16 @@ void mpool_init_with_fallback(struct mpool *p, struct mpool *fallback)
  * if there is one.
  */
 void mpool_fini(struct mpool *p)
+	//@ requires p != 0 &*& mpool(p, ?cs, ?es, ?fb) &*& mpool(fb, ?fcs, ?fes, ?ffb);
+	/*@
+	ensures
+		fb == NULL ? mpool(p, cs, es, fb)
+			&*& mpool(fb, fcs, fes, ffb)
+		: mpool(p, 0, 0, NULL)
+			&*& mpool(fb, fcs + cs, fes + es, ffb)
+	;
+	@*/
+
 {
 	struct mpool_entry *entry;
 	struct mpool_chunk *chunk;
@@ -127,26 +191,45 @@ void mpool_fini(struct mpool *p)
 
 	/* Merge the freelist into the fallback. */
 	entry = p->entry_list;
-	while (entry != NULL) {
+	int c = 0;
+	// open mpool(p, cs, es, fb);
+	while (entry != NULL) 
+		//@ invariant p->fallback |-> fb &*& mpool(fb, fcs, fes + c, ffb) &*& mpool_entry(entry, es - c);
+	{
 		void *ptr = entry;
 
 		entry = entry->next;
 		mpool_free(p->fallback, ptr);
+		++c;
 	}
+	//@ open mpool_entry(entry, _);
+	//@ assert(c == es);
 
 	/* Merge the chunk list into the fallback. */
 	chunk = p->chunk_list;
-	while (chunk != NULL) {
+	c = 0;
+	while (chunk != NULL) 
+		//@ invariant p->fallback |-> fb &*& mpool(fb, fcs + c, fes + es, ffb) &*& mpool_chunk(chunk, cs - c);
+	{
 		void *ptr = chunk;
 		size_t size = (uintptr_t)chunk->limit - (uintptr_t)chunk;
 
 		chunk = chunk->next_chunk;
-		mpool_add_chunk(p->fallback, ptr, size);
+		bool res = mpool_add_chunk(p->fallback, ptr, size);
+		if (!res) { 
+			//@ assume(false); 
+		}
+		++c;
 	}
+	//@ open mpool_chunk(chunk, _);
+	//@ assert(c == cs);
 
 	p->chunk_list = NULL;
 	p->entry_list = NULL;
 	p->fallback = NULL;
+	//@ close mpool_chunk(0, 0);
+	//@ close mpool_entry(0, 0);
+	//@ close mpool(p, 0, 0, NULL);
 
 	mpool_unlock(p);
 }
@@ -161,8 +244,8 @@ void mpool_fini(struct mpool *p)
  * if none of the buffer was usable in the pool.
  */
 bool mpool_add_chunk(struct mpool *p, void *begin, size_t size)
-//@ requires true;
-//@ ensures false;
+	//@ requires p != NULL &*& mpool(p, ?cs, ?es, ?fb) &*& begin != 0 &*& mpool_chunk_raw(begin);
+	//@ ensures result ? mpool(p, cs + 1, es, fb) : mpool(p, cs, es, fb) &*& mpool_chunk_raw(begin);
 {
 	struct mpool_chunk *chunk;
 	uintptr_t new_begin;
@@ -172,17 +255,21 @@ bool mpool_add_chunk(struct mpool *p, void *begin, size_t size)
 	new_begin = ((uintptr_t)begin + p->entry_size - 1) / p->entry_size *
 		    p->entry_size;
 	new_end = ((uintptr_t)begin + size) / p->entry_size * p->entry_size;
-
+	
 	/* Nothing to do if there isn't enough room for an entry. */
 	if (new_begin >= new_end || new_end - new_begin < p->entry_size) {
 		return false;
 	}
 
 	chunk = (struct mpool_chunk *)new_begin;
+	//@ assume(chunk == begin);
 	chunk->limit = (struct mpool_chunk *)new_end;
 
 	mpool_lock(p);
 	chunk->next_chunk = p->chunk_list;
+	//@ open mpool_chunk(p->chunk_list, cs);
+	//@ close mpool_chunk(p->chunk_list, cs);
+	//@ close mpool_chunk(chunk, cs + 1);
 	p->chunk_list = chunk;
 	mpool_unlock(p);
 
@@ -194,6 +281,14 @@ bool mpool_add_chunk(struct mpool *p, void *begin, size_t size)
  * fallback will not be used even if there is one.
  */
 static void *mpool_alloc_no_fallback(struct mpool *p)
+	//@ requires p != NULL &*& mpool(p, ?cs, ?es, ?fb);
+	/*@
+		ensures es > 0 ? mpool(p, cs, es - 1, fb) &*& pointer(result, ?r)
+		:	cs > 0 ? mpool(p, cs, es, fb)
+				&*& (result != NULL ? pointer(result, ?r) : true)
+			: mpool(p, cs, es, fb)
+		;
+	@*/
 {
 	void *ret;
 	struct mpool_chunk *chunk;
@@ -208,6 +303,9 @@ static void *mpool_alloc_no_fallback(struct mpool *p)
 		ret = entry;
 		goto exit;
 	}
+	// open mpool(p, cs, es, fb);
+	//@ open mpool_entry(p->entry_list, es);
+	//@ assert(es == 0);
 
 	/* There was no free list available. Try a chunk instead. */
 	chunk = p->chunk_list;
@@ -238,7 +336,10 @@ exit:
  * isn't one available, try and allocate from the fallback if there is one.
  */
 void *mpool_alloc(struct mpool *p)
+	//@ requires true;
+	//@ ensures true;
 {
+	//@ assume(false);
 	do {
 		void *ret = mpool_alloc_no_fallback(p);
 
@@ -259,12 +360,18 @@ void *mpool_alloc(struct mpool *p)
  * entries, one must call mpool_add_chunk instead.
  */
 void mpool_free(struct mpool *p, void *ptr)
+	//@ requires p != NULL &*& mpool(p, ?cs, ?es, ?fb) &*& ptr != 0 &*& mpool_entry_raw(ptr);
+	//@ ensures mpool(p, cs, es + 1, fb);
 {
 	struct mpool_entry *e = ptr;
 
 	/* Store the newly freed entry in the front of the free list. */
 	mpool_lock(p);
+	//@ open mpool(p, cs, es, fb);
+	//@ open mpool_entry(p->entry_list, es);
 	e->next = p->entry_list;
+	//@ close mpool_entry(e->next, es);
+	//@ close mpool_entry(e, es + 1);
 	p->entry_list = e;
 	mpool_unlock(p);
 }
@@ -348,6 +455,8 @@ void *mpool_alloc_contiguous_no_fallback(struct mpool *p, size_t count,
  * mpool_add_chunk.
  */
 void *mpool_alloc_contiguous(struct mpool *p, size_t count, size_t align)
+	//@ requires true;
+	//@ ensures true;
 {
 	do {
 		void *ret = mpool_alloc_contiguous_no_fallback(p, count, align);

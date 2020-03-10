@@ -29,13 +29,11 @@
 #include "hf/arch/spinlock.h"
 
 static inline void sl_init(struct spinlock *l)
-	//@ requires l->v |-> _ &*& create_spinlock_ghost_arg(?p) &*& p();
-	//@ ensures  spinlock(l, p);
+	//@ requires l != 0 &*& spinlock(l);
+	//@ ensures  spinlock(l);
 {
 //	*l = SPINLOCK_INIT;
 	l->v = 0;
-	//@ leak create_spinlock_ghost_arg(p); // todo
-	//@ leak p();
 }
 
 /**

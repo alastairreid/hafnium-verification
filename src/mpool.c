@@ -23,66 +23,49 @@ struct mpool_chunk {
 	struct mpool_chunk *limit;
 };
 /*@
-predicate mpool_chunk_to_void(struct mpool_chunk *s; void *t) = t == s;
-
 predicate mpool_chunk_raw(struct mpool_chunk* chunk, void *limit;) =
 	chunk == 0 ? true
 	:	chunk->next_chunk |-> _
 		&*& chunk->limit  |-> _
-		&*& mpool_chunk_to_void(chunk, ?chunkp)
-		&*& chars(chunkp + sizeof(struct mpool_chunk), limit - chunkp - sizeof(struct mpool_chunk), _)
+		&*& struct_mpool_chunk_padding(chunk)
+		&*& chars((void*)chunk + sizeof(struct mpool_chunk), limit - (void*)chunk - sizeof(struct mpool_chunk), _)
 	;
 
-predicate mpool_chunk(struct mpool_chunk* chunk; size_t size, int length) =
+predicate mpool_chunk(struct mpool_chunk* chunk, size_t ez; size_t size, int length) =
 	chunk == 0 ? length == 0 &*& size == 0
 	:	length > 0
 		&*& chunk->next_chunk |-> ?next
 		&*& chunk->limit      |-> ?limit
-		&*& mpool_chunk_to_void(chunk, ?chunkp)
-		&*& mpool_chunk_to_void(limit, ?limitp)
-		&*& chars(chunkp + sizeof(struct mpool_chunk), limitp - chunkp - sizeof(struct mpool_chunk), _)
-		&*& mpool_chunk(next, _, ?nextLength)
+		&*& struct_mpool_chunk_padding(chunk)
+		&*& chars((void*)chunk + sizeof(struct mpool_chunk), (void*)limit - (void*)chunk - sizeof(struct mpool_chunk), _)
+		&*& mpool_chunk(next, ez, _, ?nextLength)
 		&*& length == nextLength + 1
-		&*& size == limitp - chunkp
+		&*& size == (void*)limit - (void*)chunk
+		&*& size >= ez
+		&*& divrem(size, ez, ?q, 0)
 	;
-
-lemma void mpool_chunk_to_chars(struct mpool_chunk *chunk)
-	requires chunk != NULL &*& mpool_chunk_raw(chunk, ?limit);
-	ensures mpool_chunk_to_void(chunk, ?p) &*& chars(p, limit - p, _);
-{
-	assume(false);
-}
 @*/
 
 struct mpool_entry {
 	struct mpool_entry *next;
 };
-/*@
-predicate mpool_entry_to_void(struct mpool_entry* s; void* t) = t == s;
-	
+/*@	
 predicate mpool_entry_raw(struct mpool_entry* entry, size_t size;) =
 	entry == 0 ? true
 	:	entry->next |-> ?next
-		//&*& struct_mpool_entry_padding(entry)
-		&*& mpool_entry_to_void(entry + 1, ?tail)
-		&*& chars(tail, size - sizeof(struct mpool_entry), _);
+		&*& struct_mpool_entry_padding(entry)
+		&*& chars((void*)entry + sizeof(struct mpool_entry), size - sizeof(struct mpool_entry), _)
+	;
 
 predicate mpool_entry(struct mpool_entry* entry, size_t size; int length) =
 	entry == 0 ? length == 0
 	:	length > 0
 		&*& entry->next |-> ?next
+		&*& struct_mpool_entry_padding(entry)
+		&*& chars((void*)entry + sizeof(struct mpool_entry), size - sizeof(struct mpool_entry), _)
 		&*& mpool_entry(next, size, ?nextLength)
 		&*& length == nextLength + 1
-		&*& mpool_entry_to_void(entry + 1, ?tail)
-		&*& chars(tail, size - sizeof(struct mpool_entry), _)
 	;
-  
-lemma void mpool_entry_to_chars(struct mpool_entry* e)
-	requires e != NULL &*& mpool_entry_raw(e, ?size);
-	ensures mpool_entry_to_void(e, ?ep) &*& chars(ep, size, _);
-{
-	assume(false);
-}
 @*/
 
 static bool mpool_locks_enabled = false;
@@ -161,7 +144,7 @@ void mpool_init_from(struct mpool *p, struct mpool *from)
 {
 	mpool_init(p, from->entry_size);
 	//@ open mpool(p, ez, 0 ,0, NULL);
-	//@ open mpool_chunk(p->chunk_list, _, 0);
+	//@ open mpool_chunk(p->chunk_list, ez, _, 0);
 	//@ open mpool_entry(p->entry_list, ez, 0);
 
 	mpool_lock(from);
@@ -238,16 +221,12 @@ void mpool_fini(struct mpool *p)
 	chunk = p->chunk_list;
 	c = 0;
 	while (chunk != NULL) 
-		//@ invariant p->fallback |-> fb &*& mpool(fb, ez, fcs + c, fes + es, ffb) &*& mpool_chunk(chunk, ?sz, cs - c);
+		//@ invariant p->fallback |-> fb &*& mpool(fb, ez, fcs + c, fes + es, ffb) &*& mpool_chunk(chunk, ez, ?sz, cs - c);
 	{
-		//@ open mpool_chunk(chunk, sz, cs - c);
+		//@ open mpool_chunk(chunk, ez, sz, cs - c);
 
 		void *ptr = chunk;
 		size_t size = (uintptr_t)chunk->limit - (uintptr_t)chunk;
-		//@ open mpool_chunk_to_void(chunk, _);
-		//@ close mpool_chunk_to_void(chunk, _);
-		//@ open mpool_chunk_to_void(chunk->limit, _);
-		//@ close mpool_chunk_to_void(chunk->limit, _);
 		//@ assert(sz == size);
 		// assume(size >= sizeof(struct mpool_chunk));
 
@@ -259,15 +238,14 @@ void mpool_fini(struct mpool *p)
 			//@ assume(false); 
 		}
 		++c;
-		//@ assert(true);
 	}
-	//@ open mpool_chunk(chunk, _, _);
+	//@ open mpool_chunk(chunk, ez, _, _);
 	//@ assert(c == cs);
 
 	p->chunk_list = NULL;
 	p->entry_list = NULL;
 	p->fallback = NULL;
-	//@ close mpool_chunk(0, 0, 0);
+	//@ close mpool_chunk(0, ez, 0, 0);
 	//@ close mpool_entry(0, ez, 0);
 	//@ close mpool(p, ez, 0, 0, NULL);
 
@@ -290,12 +268,15 @@ bool mpool_add_chunk(struct mpool *p, void *begin, size_t size)
 		&*& begin != 0
 		&*& mpool_chunk_raw(begin, begin + size)
 		&*& size >= sizeof(struct mpool_chunk)
+		&*& size >= ez
+		&*& divrem(size, ez, ?q, 0)
 		;
 	@*/
 	/*@ ensures
 		result ? mpool(p, ez, cs + 1, es, fb)
 		:	mpool(p, ez, cs, es, fb)
 			&*& mpool_chunk_raw(begin, begin + size)
+			&*& divrem(size, ez, q, 0)
 		;
 	@*/
 {
@@ -318,9 +299,9 @@ bool mpool_add_chunk(struct mpool *p, void *begin, size_t size)
 
 	mpool_lock(p);
 	chunk->next_chunk = p->chunk_list;
-	//@ open mpool_chunk(p->chunk_list, _, cs);
-	//@ close mpool_chunk(p->chunk_list, _, cs);
-	//@ close mpool_chunk(chunk, _, cs + 1);
+	//@ open mpool_chunk(p->chunk_list, ez, _, cs);
+	//@ close mpool_chunk(p->chunk_list, ez, _, cs);
+	//@ close mpool_chunk(chunk, ez, _, cs + 1);
 	p->chunk_list = chunk;
 	mpool_unlock(p);
 
@@ -348,13 +329,14 @@ static void *mpool_alloc_no_fallback(struct mpool *p)
 	/* Fetch an entry from the free list if one is available. */
 	mpool_lock(p);
 	if (p->entry_list != NULL) {
+		// open mpool_entry(p->entry_list, ez, es);
+		// close mpool_entry(p->entry_list, ez, es);
+		// assert(es > 0);
 		struct mpool_entry *entry = p->entry_list;
 
 		p->entry_list = entry->next;
+		//@ open_struct(entry);
 		ret = entry;
-		//@ close mpool_entry_raw(ret, ez);
-		//@ mpool_entry_to_chars(ret);
-		//@ open mpool_entry_to_void(ret, _);
 		goto exit;
 	}
 	// open mpool(p, cs, es, fb);
@@ -370,12 +352,31 @@ static void *mpool_alloc_no_fallback(struct mpool *p)
 		goto exit;
 	}
 
+	// open mpool_chunk(chunk, ez, ?size, cs);
+	// close mpool_chunk(chunk, ez, size, cs);
 	new_chunk = (struct mpool_chunk *)((uintptr_t)chunk + p->entry_size);
 	if (new_chunk >= chunk->limit) {
 		p->chunk_list = chunk->next_chunk;
+		// assert(ez <= (void*)chunk->limit - (void*)chunk);
+		//@ open_struct(chunk);
+		//@ chars_join((void*)chunk);
+		//@ chars_split((void*)chunk, ez);
+		//@ leak divrem(_,_,_,_);
 	} else {
+		// open mpool_chunk(chunk, ez, ?chunk_size, cs);
+		//@ open_struct(chunk);
+		//@ chars_join((void*)chunk);
+		//@ chars_split((void*)chunk, p->entry_size);
+		//@ chars_split((void*)chunk, sizeof(struct mpool_chunk));
+		//@ close_struct(chunk);
+		
+		//@ chars_split((void*)chunk + p->entry_size, sizeof(struct mpool_chunk));
+		//@ close_struct(new_chunk);
+		// close mpool_chunk_raw(new_chunk, chunk->limit);
 		*new_chunk = *chunk;
 		p->chunk_list = new_chunk;
+		//@ open_struct(chunk);
+		//@ chars_join(chunk);
 	}
 
 	ret = chunk;

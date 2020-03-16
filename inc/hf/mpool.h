@@ -26,7 +26,7 @@
 
 struct mpool_chunk;
 //@ predicate mpool_chunk_raw(struct mpool_chunk* c, void *limit;);
-//@ predicate mpool_chunk(struct mpool_chunk* c; size_t size, int length);
+//@ predicate mpool_chunk(struct mpool_chunk* c, size_t ez; size_t size, int length);
 struct mpool_entry;
 //@ predicate mpool_entry_raw(struct mpool_entry* e, size_t size;);
 //@ predicate mpool_entry(struct mpool_entry* e, size_t size; int length);
@@ -60,7 +60,7 @@ predicate mpool(struct mpool *p; int entry_size, int chunks, int entries, struct
 	&*& p->fallback   |-> fallback
 	&*& ez >= 2*sizeof(void*)
 	&*& entry_size == ez
-	&*& mpool_chunk(chunk, _, chunks)
+	&*& mpool_chunk(chunk, entry_size, _, chunks)
 	&*& mpool_entry(entry, entry_size, entries)
 	//&*& [_]mpool(fallback, _, _, _)
 	;
@@ -115,12 +115,15 @@ bool mpool_add_chunk(struct mpool *p, void *begin, size_t size);
 		&*& begin != 0
 		&*& mpool_chunk_raw(begin, begin + size)
 		&*& size >= sizeof(struct mpool_chunk)
+		&*& size >= ez
+		&*& divrem(size, ez, ?q, 0)
 		;
 	@*/
 	/*@ ensures
 		result ? mpool(p, ez, cs + 1, es, fb)
 		:	mpool(p, ez, cs, es, fb)
 			&*& mpool_chunk_raw(begin, begin + size)
+			&*& divrem(size, ez, q, 0)
 		;
 	@*/
 

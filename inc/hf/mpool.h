@@ -24,17 +24,12 @@
 
 #include "hf/spinlock.h"
 
-/*@
-// a stac
-//inductive chunks = chunks_nil | chunks_cons(int, chunks);
-@*/
-
 struct mpool_chunk;
-//@ predicate mpool_chunk_raw(struct mpool_chunk* c;);
-//@ predicate mpool_chunk(struct mpool_chunk* c; int length);
+//@ predicate mpool_chunk_raw(struct mpool_chunk* c, void *limit;);
+//@ predicate mpool_chunk(struct mpool_chunk* c; size_t size, int length);
 struct mpool_entry;
-//@ predicate mpool_entry_raw(struct mpool_entry* e;);
-//@ predicate mpool_entry(struct mpool_entry* e; int length);
+//@ predicate mpool_entry_raw(struct mpool_entry* e, size_t size;);
+//@ predicate mpool_entry(struct mpool_entry* e, size_t size; int length);
 
 struct mpool {
 	struct spinlock lock;
@@ -55,19 +50,20 @@ predicate mpool_raw(struct mpool *p;) =
       &*& p->fallback   |-> _
     ;
 
-predicate mpool(struct mpool *p; int chunks, int entries, struct mpool *fallback) = 
-    p == 0 ? chunks == 0 &*& entries == 0 &*& fallback == NULL
-    : malloc_block_mpool(p)
-//      &*& p->lock       |-> ?lock
-      &*& p->entry_size |-> ?esize
-      &*& p->chunk_list |-> ?chunk
-      &*& p->entry_list |-> ?entry
-      &*& p->fallback   |-> fallback
-      &*& esize >= 2*sizeof(void*)
-      &*& mpool_chunk(chunk, chunks)
-      &*& mpool_entry(entry, entries)
-      //&*& [_]mpool(fallback, _, _, _)
-    ;
+predicate mpool(struct mpool *p; int entry_size, int chunks, int entries, struct mpool *fallback) = 
+	p != 0
+	&*& malloc_block_mpool(p)
+//	&*& p->lock       |-> ?lock
+	&*& p->entry_size |-> ?ez
+	&*& p->chunk_list |-> ?chunk
+	&*& p->entry_list |-> ?entry
+	&*& p->fallback   |-> fallback
+	&*& ez >= 2*sizeof(void*)
+	&*& entry_size == ez
+	&*& mpool_chunk(chunk, _, chunks)
+	&*& mpool_entry(entry, entry_size, entries)
+	//&*& [_]mpool(fallback, _, _, _)
+	;
 
 // mpool_invariant(p)();
 
@@ -79,42 +75,54 @@ void mpool_enable_locks(void);
 
 void mpool_init(struct mpool *p, size_t entry_size);
 	//@ requires p != 0 &*& mpool_raw(p) &*& entry_size > 2*sizeof(void*);
-	//@ ensures mpool(p, 0, 0, NULL);
+	//@ ensures mpool(p, entry_size, 0, 0, NULL);
 
 void mpool_init_from(struct mpool *p, struct mpool *from);
 	/*@
 	requires p != 0
 		&*& mpool_raw(p)
 		&*& from != 0
-		&*& mpool(from, ?cs, ?es, ?fb)
+		&*& mpool(from, ?ez, ?cs, ?es, ?fb)
 	;
 	@*/
-	//@ ensures mpool(p, cs, es, fb) &*& mpool(from, 0, 0, NULL);
+	//@ ensures mpool(p, ez, cs, es, fb) &*& mpool(from, ez, 0, 0, NULL);
 
 void mpool_init_with_fallback(struct mpool *p, struct mpool *fallback);
 	/*@
 	requires p != 0
 		&*& mpool_raw(p)
 		&*& fallback != 0
-		&*& [_]mpool(fallback, ?cs, ?es, ?fb)
+		&*& [_]mpool(fallback, ?ez, ?cs, ?es, ?fb)
 	;
 	@*/
-	//@ ensures mpool(p, 0, 0, fallback) &*& [_]mpool(fallback, cs, es, fb);
+	//@ ensures mpool(p, ez, 0, 0, fallback) &*& [_]mpool(fallback, ez, cs, es, fb);
 
 void mpool_fini(struct mpool *p);
-	//@ requires p != 0 &*& mpool(p, ?cs, ?es, ?fb) &*& mpool(fb, ?fcs, ?fes, ?ffb);
+	//@ requires p != 0 &*& mpool(p, ?ez, ?cs, ?es, ?fb) &*& mpool(fb, ez, ?fcs, ?fes, ?ffb);
 	/*@
 	ensures
-		fb == NULL ? mpool(p, cs, es, fb)
-			&*& mpool(fb, fcs, fes, ffb)
-		: mpool(p, 0, 0, NULL)
-			&*& mpool(fb, fcs + cs, fes + es, ffb)
+		fb == NULL ? mpool(p, ez, cs, es, fb)
+			&*& mpool(fb, ez, fcs, fes, ffb)
+		: mpool(p, ez, 0, 0, NULL)
+			&*& mpool(fb, ez, fcs + cs, fes + es, ffb)
 	;
 	@*/
 
 bool mpool_add_chunk(struct mpool *p, void *begin, size_t size);
-	//@ requires p != NULL &*& mpool(p, ?cs, ?es, ?fb) &*& begin != 0 &*& mpool_chunk_raw(begin);
-	//@ ensures result ? mpool(p, cs + 1, es, fb) : mpool(p, cs, es, fb) &*& mpool_chunk_raw(begin);
+	/*@ requires
+		p != NULL
+		&*& mpool(p, ?ez, ?cs, ?es, ?fb)
+		&*& begin != 0
+		&*& mpool_chunk_raw(begin, begin + size)
+		&*& size >= sizeof(struct mpool_chunk)
+		;
+	@*/
+	/*@ ensures
+		result ? mpool(p, ez, cs + 1, es, fb)
+		:	mpool(p, ez, cs, es, fb)
+			&*& mpool_chunk_raw(begin, begin + size)
+		;
+	@*/
 
 void *mpool_alloc(struct mpool *p);
 	//@ requires true;
@@ -125,7 +133,7 @@ void *mpool_alloc_contiguous(struct mpool *p, size_t count, size_t align);
 	//@ ensures true;
 
 void mpool_free(struct mpool *p, void *ptr);
-	//@ requires p != NULL &*& mpool(p, ?cs, ?es, ?fb) &*& ptr != 0 &*& mpool_entry_raw(ptr);
-	//@ ensures mpool(p, cs, es + 1, fb);
+	//@ requires p != NULL &*& mpool(p, ?ez, ?cs, ?es, ?fb) &*& ptr != 0 &*& mpool_entry_raw(ptr, ez);
+	//@ ensures mpool(p, ez, cs, es + 1, fb);
 
 #endif

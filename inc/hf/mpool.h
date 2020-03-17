@@ -40,19 +40,17 @@ struct mpool {
 };
 
 /*@
-predicate mpool_raw(struct mpool *p;) = 
-    p == 0 ? true
-    : malloc_block_mpool(p)
-//      &*& p->lock       |-> ?lock
-      &*& p->entry_size |-> _
-      &*& p->chunk_list |-> _
-      &*& p->entry_list |-> _
-      &*& p->fallback   |-> _
-    ;
+predicate mpool_raw(struct mpool *p;) =
+	p != NULL
+//	&*& p->lock       |-> _
+	&*& p->entry_size |-> _
+	&*& p->chunk_list |-> _
+	&*& p->entry_list |-> _
+	&*& p->fallback   |-> _
+	;
 
 predicate mpool(struct mpool *p; int entry_size, int chunks, int entries, struct mpool *fallback) = 
-	p != 0
-	&*& malloc_block_mpool(p)
+	p != NULL
 //	&*& p->lock       |-> ?lock
 	&*& p->entry_size |-> ?ez
 	&*& p->chunk_list |-> ?chunk

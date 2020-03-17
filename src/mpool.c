@@ -24,15 +24,15 @@ struct mpool_chunk {
 };
 /*@
 predicate mpool_chunk_raw(struct mpool_chunk* chunk, void *limit;) =
-	chunk == 0 ? true
-	:	chunk->next_chunk |-> _
-		&*& chunk->limit  |-> _
-		&*& struct_mpool_chunk_padding(chunk)
-		&*& chars((void*)chunk + sizeof(struct mpool_chunk), limit - (void*)chunk - sizeof(struct mpool_chunk), _)
+	chunk != NULL
+	&*& chunk->next_chunk |-> _
+	&*& chunk->limit  |-> _
+	&*& struct_mpool_chunk_padding(chunk)
+	&*& chars((void*)chunk + sizeof(struct mpool_chunk), limit - (void*)chunk - sizeof(struct mpool_chunk), _)
 	;
 
 predicate mpool_chunk(struct mpool_chunk* chunk, size_t ez; size_t size, int length) =
-	chunk == 0 ? length == 0 &*& size == 0
+	chunk == NULL ? length == 0 &*& size == 0
 	:	length > 0
 		&*& chunk->next_chunk |-> ?next
 		&*& chunk->limit      |-> ?limit
@@ -51,14 +51,14 @@ struct mpool_entry {
 };
 /*@	
 predicate mpool_entry_raw(struct mpool_entry* entry, size_t size;) =
-	entry == 0 ? true
-	:	entry->next |-> ?next
-		&*& struct_mpool_entry_padding(entry)
-		&*& chars((void*)entry + sizeof(struct mpool_entry), size - sizeof(struct mpool_entry), _)
+	entry != NULL
+	&*& entry->next |-> ?next
+	&*& struct_mpool_entry_padding(entry)
+	&*& chars((void*)entry + sizeof(struct mpool_entry), size - sizeof(struct mpool_entry), _)
 	;
 
 predicate mpool_entry(struct mpool_entry* entry, size_t size; int length) =
-	entry == 0 ? length == 0
+	entry == NULL ? length == 0
 	:	length > 0
 		&*& entry->next |-> ?next
 		&*& struct_mpool_entry_padding(entry)

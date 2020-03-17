@@ -357,26 +357,34 @@ static void *mpool_alloc_no_fallback(struct mpool *p)
 	new_chunk = (struct mpool_chunk *)((uintptr_t)chunk + p->entry_size);
 	if (new_chunk >= chunk->limit) {
 		p->chunk_list = chunk->next_chunk;
-		// assert(ez <= (void*)chunk->limit - (void*)chunk);
 		//@ open_struct(chunk);
 		//@ chars_join((void*)chunk);
 		//@ chars_split((void*)chunk, ez);
 		//@ leak divrem(_,_,_,_);
 	} else {
-		// open mpool_chunk(chunk, ez, ?chunk_size, cs);
+	//@ assert(chunk->limit |-> ?limit1);
+	//@ assert(chunk->next_chunk |-> ?next_chunk1);
 		//@ open_struct(chunk);
 		//@ chars_join((void*)chunk);
 		//@ chars_split((void*)chunk, p->entry_size);
+	//@ assume(sizeof(struct mpool_chunk) <= ez);
 		//@ chars_split((void*)chunk, sizeof(struct mpool_chunk));
 		//@ close_struct(chunk);
+	//@ assert(chunk->limit |-> ?limit2);
+	//@ assert(chunk->next_chunk |-> ?next_chunk2);
+	//@ assume(limit1 == limit2 && next_chunk1 == next_chunk2);
 		
-		//@ chars_split((void*)chunk + p->entry_size, sizeof(struct mpool_chunk));
+	//@ assume(sizeof(struct mpool_chunk) <= (void*)chunk->limit - (void*)chunk - ez);
+		//@ chars_split((void*)new_chunk, sizeof(struct mpool_chunk));
 		//@ close_struct(new_chunk);
-		// close mpool_chunk_raw(new_chunk, chunk->limit);
-		*new_chunk = *chunk;
+		// *new_chunk = *chunk;
+		new_chunk->limit = chunk->limit;
+		new_chunk->next_chunk = chunk->next_chunk;
 		p->chunk_list = new_chunk;
-		//@ open_struct(chunk);
-		//@ chars_join(chunk);
+	//@ assume((void*)new_chunk->limit - (void*)new_chunk >= ez);
+		//@ close mpool_chunk(new_chunk, ez, (void*)new_chunk->limit - (void*)new_chunk, cs);
+		//@ close mpool(p, ez, cs, es, fb);
+		
 	}
 
 	ret = chunk;

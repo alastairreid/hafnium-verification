@@ -41,9 +41,18 @@ predicate mpool_chunk(struct mpool_chunk* chunk, size_t ez; size_t size, int len
 		&*& mpool_chunk(next, ez, _, ?nextLength)
 		&*& length == nextLength + 1
 		&*& size == (void*)limit - (void*)chunk
-		&*& size >= ez
 		&*& divrem(size, ez, ?q, 0)
 	;
+
+// TODO: prove this
+lemma void divrem_pos();
+    requires divrem(?D, ?d, ?q, 0) &*& D > 0 &*& d > 0;
+    ensures divrem(D, d, q, 0) &*& D >= d;
+
+lemma void divrem_pos2();
+    requires divrem(?D, ?d, ?q, 0) &*& D > 0 &*& d > 0;
+    ensures divrem(D - d, d, _, 0);
+
 @*/
 
 struct mpool_entry {
@@ -268,7 +277,6 @@ bool mpool_add_chunk(struct mpool *p, void *begin, size_t size)
 		&*& begin != 0
 		&*& mpool_chunk_raw(begin, begin + size)
 		&*& size >= sizeof(struct mpool_chunk)
-		&*& size >= ez
 		&*& divrem(size, ez, ?q, 0)
 		;
 	@*/
@@ -359,6 +367,7 @@ static void *mpool_alloc_no_fallback(struct mpool *p)
 		p->chunk_list = chunk->next_chunk;
 		//@ open_struct(chunk);
 		//@ chars_join((void*)chunk);
+		//@ divrem_pos();
 		//@ chars_split((void*)chunk, ez);
 		//@ leak divrem(_,_,_,_);
 	} else {
@@ -382,8 +391,10 @@ static void *mpool_alloc_no_fallback(struct mpool *p)
 		new_chunk->next_chunk = chunk->next_chunk;
 		p->chunk_list = new_chunk;
 	//@ assume((void*)new_chunk->limit - (void*)new_chunk >= ez);
+		//@ divrem_pos2();
 		//@ close mpool_chunk(new_chunk, ez, (void*)new_chunk->limit - (void*)new_chunk, cs);
 		//@ close mpool(p, ez, cs, es, fb);
+		//@ open_struct(chunk);
 		
 	}
 
@@ -400,19 +411,26 @@ exit:
  * isn't one available, try and allocate from the fallback if there is one.
  */
 void *mpool_alloc(struct mpool *p)
-	//@ requires true;
-	//@ ensures true;
+	//@ requires p != NULL &*& mpool(p, ?ez, ?cs, ?es, ?fb);
+	/*@
+		ensures 
+			mpool(p, ez, _, _, fb)
+			&*& result != NULL ? chars(result, ez, _) : true
+		;
+	@*/
 {
-	//@ assume(false);
-	do {
-		void *ret = mpool_alloc_no_fallback(p);
+	struct mpool *pp = p;
+	do
+	//@ invariant pp != NULL &*& mpool(pp, ez, _, _, _);
+	{
+		void *ret = mpool_alloc_no_fallback(pp);
 
 		if (ret != NULL) {
 			return ret;
 		}
 
-		p = p->fallback;
-	} while (p != NULL);
+		pp = pp->fallback;
+	} while (pp != NULL);
 
 	return NULL;
 }
@@ -431,11 +449,11 @@ void mpool_free(struct mpool *p, void *ptr)
 
 	/* Store the newly freed entry in the front of the free list. */
 	mpool_lock(p);
-	//@ open mpool(p, cs, es, fb);
-	//@ open mpool_entry(p->entry_list, es);
+	//@ open mpool(p, ez, cs, es, fb);
+	//@ open mpool_entry(p->entry_list, ez, es);
 	e->next = p->entry_list;
-	//@ close mpool_entry(e->next, es);
-	//@ close mpool_entry(e, es + 1);
+	//@ close mpool_entry(e->next, ez, es);
+	//@ close mpool_entry(e, ez, es + 1);
 	p->entry_list = e;
 	mpool_unlock(p);
 }

@@ -50,17 +50,18 @@ predicate mpool_raw(struct mpool *p;) =
 	;
 
 predicate mpool(struct mpool *p; int entry_size, int chunks, int entries, struct mpool *fallback) = 
-	p != NULL
-//	&*& p->lock       |-> ?lock
-	&*& p->entry_size |-> ?ez
-	&*& p->chunk_list |-> ?chunk
-	&*& p->entry_list |-> ?entry
-	&*& p->fallback   |-> fallback
-	&*& ez >= 2*sizeof(void*)
-	&*& entry_size == ez
-	&*& mpool_chunk(chunk, entry_size, _, chunks)
-	&*& mpool_entry(entry, entry_size, entries)
-	//&*& [_]mpool(fallback, _, _, _)
+	p == NULL ? entry_size == 0 &*& chunks == 0 &*& entries == 0 &*& fallback == NULL
+	:	
+//		&*& p->lock       |-> ?lock
+		    p->entry_size |-> ?ez
+		&*& p->chunk_list |-> ?chunk
+		&*& p->entry_list |-> ?entry
+		&*& p->fallback   |-> fallback
+		&*& entry_size == ez
+		&*& ez >= 2*sizeof(void*)
+		&*& mpool_chunk(chunk, entry_size, _, chunks)
+		&*& mpool_entry(entry, entry_size, entries)
+		//&*& [_]mpool(fallback, ez, _, _, _)
 	;
 
 // mpool_invariant(p)();
@@ -113,7 +114,6 @@ bool mpool_add_chunk(struct mpool *p, void *begin, size_t size);
 		&*& begin != 0
 		&*& mpool_chunk_raw(begin, begin + size)
 		&*& size >= sizeof(struct mpool_chunk)
-		&*& size >= ez
 		&*& divrem(size, ez, ?q, 0)
 		;
 	@*/
@@ -126,8 +126,14 @@ bool mpool_add_chunk(struct mpool *p, void *begin, size_t size);
 	@*/
 
 void *mpool_alloc(struct mpool *p);
-	//@ requires true;
-	//@ ensures true;
+	//@ requires p != NULL &*& mpool(p, ?ez, ?cs, ?es, ?fb);
+	/*@
+		ensures 
+			mpool(p, ez, _, _, fb)
+			&*& result != NULL ? chars(result, ez, _) : true
+		;
+	@*/
+
 
 void *mpool_alloc_contiguous(struct mpool *p, size_t count, size_t align);
 	//@ requires true;

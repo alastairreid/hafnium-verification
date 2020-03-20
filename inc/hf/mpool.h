@@ -49,19 +49,37 @@ predicate mpool_raw(struct mpool *p;) =
 	&*& p->fallback   |-> _
 	;
 
-predicate mpool(struct mpool *p; int entry_size, int chunks, int entries, struct mpool *fallback) = 
-	p == NULL ? entry_size == 0 &*& chunks == 0 &*& entries == 0 &*& fallback == NULL
-	:	
-//		&*& p->lock       |-> ?lock
-		    p->entry_size |-> ?ez
-		&*& p->chunk_list |-> ?chunk
-		&*& p->entry_list |-> ?entry
-		&*& p->fallback   |-> fallback
-		&*& entry_size == ez
-		&*& ez >= 2*sizeof(void*)
-		&*& mpool_chunk(chunk, entry_size, _, chunks)
-		&*& mpool_entry(entry, entry_size, entries)
-		//&*& [_]mpool(fallback, ez, _, _, _)
+inductive abs_mpool = Mpool(
+	int,  // chunks
+	int   // entries
+);
+
+fixpoint int mpool_chunks(abs_mpool p) {
+	switch(p) {
+		case Mpool(cs, es): return cs;
+	}
+}
+
+fixpoint int mpool_entries(abs_mpool p) {
+	switch(p) {
+		case Mpool(cs, es): return es;
+	}
+}
+
+predicate mpool(struct mpool *p; int entry_size, list<abs_mpool> abs_mpools) = 
+	// p->lock       |-> ?lock
+	p->entry_size |-> ?ez
+	&*& p->chunk_list |-> ?chunk
+	&*& p->entry_list |-> ?entry
+	&*& p->fallback   |-> ?fallback
+	&*& entry_size == ez
+	&*& ez >= 2*sizeof(void*)
+	&*& mpool_chunk(chunk, entry_size, _, ?chunks)
+	&*& mpool_entry(entry, entry_size, ?entries)
+	&*& (fallback != 0 ? 
+		[_]mpool(fallback, ez, ?fallbacks)
+		&*& abs_mpools == cons(Mpool(chunks, entries), fallbacks)
+	:	abs_mpools == cons(Mpool(chunks, entries), nil))
 	;
 
 // mpool_invariant(p)();
@@ -73,44 +91,50 @@ void mpool_enable_locks(void);
 	//@ ensures true;
 
 void mpool_init(struct mpool *p, size_t entry_size);
-	//@ requires p != 0 &*& mpool_raw(p) &*& entry_size > 2*sizeof(void*);
-	//@ ensures mpool(p, entry_size, 0, 0, NULL);
+	//@ requires p != 0 &*& mpool_raw(p) &*& entry_size >= 2*sizeof(void*);
+	//@ ensures mpool(p, entry_size, cons(Mpool(0, 0), nil));
 
 void mpool_init_from(struct mpool *p, struct mpool *from);
 	/*@
 	requires p != 0
 		&*& mpool_raw(p)
 		&*& from != 0
-		&*& mpool(from, ?ez, ?cs, ?es, ?fb)
+		&*& mpool(from, ?ez, ?mpools)
 	;
 	@*/
-	//@ ensures mpool(p, ez, cs, es, fb) &*& mpool(from, ez, 0, 0, NULL);
+	//@ ensures mpool(p, ez, mpools) &*& mpool(from, ez, cons(Mpool(0, 0), nil));
 
 void mpool_init_with_fallback(struct mpool *p, struct mpool *fallback);
 	/*@
 	requires p != 0
 		&*& mpool_raw(p)
 		&*& fallback != 0
-		&*& [_]mpool(fallback, ?ez, ?cs, ?es, ?fb)
+		&*& [_]mpool(fallback, ?ez, ?mpools)
 	;
 	@*/
-	//@ ensures mpool(p, ez, 0, 0, fallback) &*& [_]mpool(fallback, ez, cs, es, fb);
+	//@ ensures mpool(p, ez, cons(Mpool(0, 0), mpools)) &*& [_]mpool(fallback, ez, mpools);
 
 void mpool_fini(struct mpool *p);
-	//@ requires p != 0 &*& mpool(p, ?ez, ?cs, ?es, ?fb) &*& mpool(fb, ez, ?fcs, ?fes, ?ffb);
+	/*@
+	requires 
+		p != 0
+		&*& mpool(p, ?ez, cons(Mpool(?cs, ?es), ?fbs))
+		&*& p->fallback |-> ?fb
+		;
+	@*/
 	/*@
 	ensures
-		fb == NULL ? mpool(p, ez, cs, es, fb)
-			&*& mpool(fb, ez, fcs, fes, ffb)
-		: mpool(p, ez, 0, 0, NULL)
-			&*& mpool(fb, ez, fcs + cs, fes + es, ffb)
+		fbs == nil ? mpool(p, ez, cons(Mpool(cs, es), fbs)) &*& p->fallback |-> fb
+		:	fbs == cons(Mpool(?fcs, ?fes), ?ffbs)
+			&*& mpool(p, ez, cons(Mpool(0, 0), nil))
+			&*& [_]mpool(fb, ez, cons(Mpool(fcs + cs, fes + es), ffbs))
 	;
 	@*/
 
 bool mpool_add_chunk(struct mpool *p, void *begin, size_t size);
 	/*@ requires
 		p != NULL
-		&*& mpool(p, ?ez, ?cs, ?es, ?fb)
+		&*& mpool(p, ?ez, cons(Mpool(?cs, ?es), ?fbs))
 		&*& begin != 0
 		&*& mpool_chunk_raw(begin, begin + size)
 		&*& size >= sizeof(struct mpool_chunk)
@@ -118,21 +142,39 @@ bool mpool_add_chunk(struct mpool *p, void *begin, size_t size);
 		;
 	@*/
 	/*@ ensures
-		result ? mpool(p, ez, cs + 1, es, fb)
-		:	mpool(p, ez, cs, es, fb)
+		result ? mpool(p, ez, cons(Mpool(cs + 1, es), fbs))
+		:	mpool(p, ez, cons(Mpool(cs, es), fbs))
 			&*& mpool_chunk_raw(begin, begin + size)
 			&*& divrem(size, ez, q, 0)
 		;
 	@*/
 
+/*@
+predicate alloc_result(struct mpool *p, size_t ez, list<abs_mpool> old_abs_mpools, void *result; list<abs_mpool> abs_mpools) =
+	p == NULL ?
+		old_abs_mpools == nil
+		&*& result == NULL
+		&*& abs_mpools == nil
+	:	old_abs_mpools == cons(Mpool(?cs, ?es), ?fbs)
+		&*& es > 0 ? 
+			mpool(p, ez, cons(Mpool(cs, es - 1), fbs))
+			&*& result != NULL
+			&*& chars(result, ez, _)
+			&*& abs_mpools == cons(Mpool(cs, es - 1), fbs)
+		:	cs > 0 ? 
+				mpool(p, ez, cons(Mpool(?ccs, es), fbs))
+				&*& result != NULL
+				&*& chars(result, ez, _)
+				&*& abs_mpools == cons(Mpool(ccs, es), fbs)
+			:	p->fallback |-> ?fallback
+				&*& alloc_result(fallback, ez, fbs, result, ?ffbs)
+				&*& mpool(p, ez, cons(Mpool(cs, es), ffbs))
+				&*& abs_mpools == cons(Mpool(cs, es), ffbs)
+	;
+@*/
 void *mpool_alloc(struct mpool *p);
-	//@ requires p != NULL &*& mpool(p, ?ez, ?cs, ?es, ?fb);
-	/*@
-		ensures 
-			mpool(p, ez, _, _, fb)
-			&*& result != NULL ? chars(result, ez, _) : true
-		;
-	@*/
+	//@ requires p != NULL &*& mpool(p, ?ez, cons(Mpool(?cs, ?es), ?fbs));
+	//@ ensures alloc_result(p, ez, cons(Mpool(cs, es), fbs), result, _);
 
 
 void *mpool_alloc_contiguous(struct mpool *p, size_t count, size_t align);
@@ -140,7 +182,7 @@ void *mpool_alloc_contiguous(struct mpool *p, size_t count, size_t align);
 	//@ ensures true;
 
 void mpool_free(struct mpool *p, void *ptr);
-	//@ requires p != NULL &*& mpool(p, ?ez, ?cs, ?es, ?fb) &*& ptr != 0 &*& mpool_entry_raw(ptr, ez);
-	//@ ensures mpool(p, ez, cs, es + 1, fb);
+	//@ requires p != NULL &*& mpool(p, ?ez, cons(Mpool(?cs, ?es), ?fbs)) &*& ptr != 0 &*& mpool_entry_raw(ptr, ez);
+	//@ ensures mpool(p, ez, cons(Mpool(cs, es + 1), fbs));
 
 #endif

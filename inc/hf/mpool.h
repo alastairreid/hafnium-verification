@@ -24,12 +24,16 @@
 
 #include "hf/spinlock.h"
 
+//#include "hf/mm.h"
+#define MPOOL_ENTRY_SIZE 256
+//sizeof(struct mm_page_table)
+
 struct mpool_chunk;
 //@ predicate mpool_chunk_raw(struct mpool_chunk* c, void *limit;);
-//@ predicate mpool_chunk(struct mpool_chunk* c, size_t ez; size_t size, int length);
+//@ predicate mpool_chunk(struct mpool_chunk* c;);
 struct mpool_entry;
-//@ predicate mpool_entry_raw(struct mpool_entry* e, size_t size;);
-//@ predicate mpool_entry(struct mpool_entry* e, size_t size; int length);
+//@ predicate mpool_entry_raw(struct mpool_entry* e;);
+//@ predicate mpool_entry(struct mpool_entry* e;);
 
 struct mpool {
 	struct spinlock lock;
@@ -49,43 +53,27 @@ predicate mpool_raw(struct mpool *p;) =
 	&*& p->fallback   |-> _
 	;
 
-inductive abs_mpool = Mpool(
-	int,  // chunks
-	int   // entries
-);
-
-fixpoint int mpool_chunks(abs_mpool p) {
-	switch(p) {
-		case Mpool(cs, es): return cs;
-	}
-}
-
-fixpoint int mpool_entries(abs_mpool p) {
-	switch(p) {
-		case Mpool(cs, es): return es;
-	}
-}
-
-predicate mpool(struct mpool *p; int entry_size, list<abs_mpool> abs_mpools) = 
-	// p->lock       |-> ?lock
-	p->entry_size |-> ?ez
+predicate mpool(struct mpool *p; bool non_empty, bool have_fb) =
+	p != NULL 
+	//&*& p->lock       |-> ?lock
+	&*& p->entry_size |-> ?entry_size
 	&*& p->chunk_list |-> ?chunk
 	&*& p->entry_list |-> ?entry
 	&*& p->fallback   |-> ?fallback
-	&*& entry_size == ez
-	&*& ez >= 2*sizeof(void*)
-	&*& mpool_chunk(chunk, entry_size, _, ?chunks)
-	&*& mpool_entry(entry, entry_size, ?entries)
-	&*& (fallback != 0 ? 
-		[_]mpool(fallback, ez, ?fallbacks)
-		&*& abs_mpools == cons(Mpool(chunks, entries), fallbacks)
-	:	abs_mpools == cons(Mpool(chunks, entries), nil))
+	&*& entry_size == MPOOL_ENTRY_SIZE
+	&*& ((chunk == NULL && entry == NULL) ? non_empty == false 
+	    :	non_empty == true
+	    	&*& (chunk != NULL ? mpool_chunk(chunk) : true)
+		&*& (entry != NULL ? mpool_entry(entry) : true)
+	    )
+	&*& (fallback == NULL ? have_fb == false
+	    :	have_fb == true
+	    	&*& [_]mpool(fallback, _, _)
+	    )
 	;
-
-// mpool_invariant(p)();
-
 @*/
 
+#if 0
 void mpool_enable_locks(void);
 	//@ requires true;
 	//@ ensures true;
@@ -185,4 +173,5 @@ void mpool_free(struct mpool *p, void *ptr);
 	//@ requires p != NULL &*& mpool(p, ?ez, cons(Mpool(?cs, ?es), ?fbs)) &*& ptr != 0 &*& mpool_entry_raw(ptr, ez);
 	//@ ensures mpool(p, ez, cons(Mpool(cs, es + 1), fbs));
 
+#endif
 #endif

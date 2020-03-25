@@ -97,10 +97,10 @@ void mpool_init_with_fallback(struct mpool *p, struct mpool *fallback);
 	requires p != 0
 		&*& mpool_raw(p)
 		&*& fallback != 0
-		&*& [_]mpool(fallback, ?ez, ?mpools)
+		&*& [?f]mpool(fallback, ?ez, ?mpools)
 	;
 	@*/
-	//@ ensures mpool(p, ez, cons(Mpool(0, 0), mpools)) &*& [_]mpool(fallback, ez, mpools);
+	//@ ensures mpool(p, ez, cons(Mpool(0, 0), mpools)) &*& [f]mpool(fallback, ez, mpools);
 
 void mpool_fini(struct mpool *p);
 	/*@

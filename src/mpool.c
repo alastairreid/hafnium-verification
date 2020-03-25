@@ -90,8 +90,8 @@ void mpool_enable_locks(void)
  * Acquires the lock protecting the given memory pool, if locks are enabled.
  */
 static void mpool_lock(struct mpool *p)
-	//@ requires p != 0 &*& [_]mpool(p, ?non_empty, ?have_fb);
-	//@ ensures [1]mpool(p, non_empty, have_fb);
+	//@ requires p != 0 &*& [?f]mpool(p, ?non_empty, ?have_fb);
+	//@ ensures mpool(p, non_empty, have_fb);
 {
 	//@ assume(false);
 	if (mpool_locks_enabled) {
@@ -145,15 +145,15 @@ void mpool_init_from(struct mpool *p, struct mpool *from)
 	requires p != 0
 		&*& mpool_raw(p)
 		&*& from != 0
-		&*& [_]mpool(from, ?non_empty, ?have_fb)
+		&*& [?f]mpool(from, ?non_empty, ?have_fb)
 	;
 	@*/
-	//@ ensures mpool(p, non_empty, have_fb) &*& [_]mpool(from, false, false);
+	//@ ensures mpool(p, non_empty, have_fb);
 {
 	mpool_init(p, from->entry_size);
 
 	mpool_lock(from);
-	//@ open [1]mpool(from, _, _);
+	//@ open mpool(from, _, _);
 	p->chunk_list = from->chunk_list;
 	p->entry_list = from->entry_list;
 	p->fallback = from->fallback;
@@ -177,7 +177,7 @@ void mpool_init_with_fallback(struct mpool *p, struct mpool *fallback)
 		&*& [_]mpool(fallback, ?non_empty, ?have_fb)
 	;
 	@*/
-	//@ ensures mpool(p, false, true) &*& [_]mpool(fallback, non_empty, have_fb);
+	//@ ensures mpool(p, false, true);
 {
 	mpool_init(p, fallback->entry_size);
 	p->fallback = fallback;
@@ -321,7 +321,7 @@ bool mpool_add_chunk(struct mpool *p, void *begin, size_t size)
  */
 static void *mpool_alloc_no_fallback(struct mpool *p)
 	//@ requires p != NULL &*& [_]mpool(p, ?non_empty, ?have_fb);
-	//@ ensures [_]mpool(p, non_empty, have_fb) &*& (result != NULL ? chars(result, MPOOL_ENTRY_SIZE, _) : true);
+	//@ ensures [_]mpool(p, _, have_fb) &*& (result != NULL ? chars(result, MPOOL_ENTRY_SIZE, _) : true);
 {
 	void *ret;
 	struct mpool_chunk *chunk;

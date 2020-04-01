@@ -29,6 +29,9 @@ predicate mpool_chunk_raw(struct mpool_chunk* chunk, void *limit;) =
 	&*& chunk->limit      |-> _
 	&*& struct_mpool_chunk_padding(chunk)
 	&*& chars((void*)chunk + sizeof(struct mpool_chunk), limit - (void*)chunk - sizeof(struct mpool_chunk), _)
+	&*& divrem((uintptr_t)chunk, MPOOL_ENTRY_SIZE, ?chunk_q, 0)
+	&*& divrem((uintptr_t)limit, MPOOL_ENTRY_SIZE, ?limit_q, 0)
+	&*& limit_q > chunk_q
 	;
 
 predicate mpool_chunk(struct mpool_chunk* chunk;) =
@@ -38,24 +41,48 @@ predicate mpool_chunk(struct mpool_chunk* chunk;) =
 	&*& struct_mpool_chunk_padding(chunk)
 	&*& chars((void*)chunk + sizeof(struct mpool_chunk), (void*)limit - (void*)chunk - sizeof(struct mpool_chunk), _)
 	&*& (next != NULL ? mpool_chunk(next) : true)
-	&*& divrem((void*)limit - (void*)chunk, MPOOL_ENTRY_SIZE, ?q, 0)
+	&*& divrem((uintptr_t)chunk, MPOOL_ENTRY_SIZE, ?chunk_q, 0)
+	&*& divrem((uintptr_t)limit, MPOOL_ENTRY_SIZE, ?limit_q, 0)
+	&*& limit_q > chunk_q 
 	;
 
 // TODO: prove this
 lemma void divrem_pos();
-    requires divrem(?D, ?d, ?q, 0) &*& D > 0 &*& d > 0;
-    ensures divrem(D, d, q, 0) &*& D >= d;
+	requires divrem(?D, ?d, ?q, 0) &*& D > 0 &*& d > 0;
+	ensures divrem(D, d, q, 0) &*& D >= d;
 
 lemma void divrem_pos2();
-    requires divrem(?D, ?d, ?q, 0) &*& D > 0 &*& d > 0;
-    ensures divrem(D - d, d, _, 0);
+	requires divrem(?D, ?d, ?q, 0) &*& D > 0 &*& d > 0;
+	ensures divrem(D, d, q, 0) &*& divrem(D - d, d, _, 0);
 
+lemma void divrem3(int D);
+	requires divrem(D, ?d, ?q, ?r);
+	ensures divrem(D, d, q, r) &*& divrem(D + d, d, q + 1, r);
+	
+lemma void divrem4(int D1, int D2);
+	requires divrem(D1, ?d, ?q1, 0) &*& divrem(D2, d, ?q2, 0);
+	ensures divrem(D1, d, q1, 0) &*& divrem(D2, d, q2, 0) &*& divrem(D1 + D2, d, q1 + q2, 0);
+
+lemma void divrem5(int D1, int D2);
+	requires divrem(D1, ?d, ?q1, 0) &*& divrem(D2, d, ?q2, 0) &*& D1 <= D2;
+	ensures divrem(D1, d, q1, 0) &*& divrem(D2, d, q2, 0) &*& divrem(D2 - D1, d, q2 - q1, 0);
+	
 lemma void mpool_chunk_raw_of_chars(void *p)
-	requires p != NULL &*& chars(p, ?size, _) &*& size >= sizeof(struct mpool_chunk);
-	ensures mpool_chunk_raw((struct mpool_chunk *)p, p+size);
+	requires 
+		p != NULL
+		&*& chars(p, ?size, _)
+		&*& size >= sizeof(struct mpool_chunk)
+		&*& divrem((uintptr_t)p, MPOOL_ENTRY_SIZE, _, 0)
+		&*& divrem(size, MPOOL_ENTRY_SIZE, ?size_q, 0)
+		;
+	ensures
+		mpool_chunk_raw((struct mpool_chunk *)p, p + size)
+		&*& divrem(size, MPOOL_ENTRY_SIZE, size_q, 0)
+		;
 {
 	chars_split((void *)p, sizeof(struct mpool_chunk));
 	close_struct((struct mpool_chunk *)p);
+	divrem4((int)p, size);
 }
 
 lemma void mpool_chunk_split_entry(struct mpool_chunk *chunk)
@@ -267,7 +294,11 @@ void mpool_fini(struct mpool *p)
 		chunk = chunk->next_chunk;
 		//@ open_struct((struct mpool_chunk *)ptr);
 		bool res = mpool_add_chunk(p->fallback, ptr, size);
+		// FIXME: the assume below relies on the leaked divrem
 		//@ assume(res);
+		//@ leak divrem(_, MPOOL_ENTRY_SIZE, _, 0);
+		//@ leak divrem(_, MPOOL_ENTRY_SIZE, _, 0);
+		
 		++c;
 	}
 
@@ -293,16 +324,12 @@ bool mpool_add_chunk(struct mpool *p, void *begin, size_t size)
 		&*& [?f]mpool(p, ?non_empty, ?have_fb)
 		&*& begin != 0
 		&*& chars(begin, size, _)
-		&*& size >= sizeof(struct mpool_chunk)
-		// FIXME:
-		&*& divrem(size, MPOOL_ENTRY_SIZE, ?q, 0)
 		;
 	@*/
 	/*@ ensures
 		result ? [f]mpool(p, true, have_fb)
 		:	[f]mpool(p, non_empty, have_fb)
 			&*& chars(begin, size, _)
-			&*& divrem(size, MPOOL_ENTRY_SIZE, q, 0)
 		;
 	@*/
 {
@@ -311,24 +338,44 @@ bool mpool_add_chunk(struct mpool *p, void *begin, size_t size)
 	uintptr_t new_end;
 
 	/* Round begin address up, and end address down. */
-	new_begin = (uintptr_t)begin;/*((uintptr_t)begin + p->entry_size - 1) / p->entry_size *
-		    p->entry_size;*/
-	new_end = ((uintptr_t)begin + size);// / p->entry_size * p->entry_size;
-	
+	new_begin = ((uintptr_t)begin + p->entry_size - 1) / p->entry_size *
+		    p->entry_size;
+	// assume(new_begin == ((uintptr_t)begin % MPOOL_ENTRY_SIZE == 0 ? (uintptr_t)begin : (uintptr_t)begin + (MPOOL_ENTRY_SIZE - ((uintptr_t)begin % MPOOL_ENTRY_SIZE))));
+	//@ assume(new_begin >= (uintptr_t)begin);
+	//@ assume(new_begin == MPOOL_ENTRY_SIZE * (new_begin / MPOOL_ENTRY_SIZE));
+	//@ divrem_intro(new_begin, MPOOL_ENTRY_SIZE, new_begin / MPOOL_ENTRY_SIZE, 0);
+    
+	new_end = ((uintptr_t)begin + size) / p->entry_size * p->entry_size;
+	// assume(new_end == ((uintptr_t)begin + size) - (((uintptr_t)begin + size) % MPOOL_ENTRY_SIZE));
+	//@ assume(new_end <= (uintptr_t)begin + size);
+	//@ assume(new_end == MPOOL_ENTRY_SIZE * (new_end / MPOOL_ENTRY_SIZE));
+	//@ divrem_intro(new_end, MPOOL_ENTRY_SIZE, new_end / MPOOL_ENTRY_SIZE, 0);
+
 	/* Nothing to do if there isn't enough room for an entry. */
 	if (new_begin >= new_end || new_end - new_begin < p->entry_size) {
+		//@ leak divrem(new_begin, MPOOL_ENTRY_SIZE, new_begin / MPOOL_ENTRY_SIZE, 0);
+		//@ leak divrem(new_end, MPOOL_ENTRY_SIZE, new_end / MPOOL_ENTRY_SIZE, 0);
 		return false;
 	}
-
+	//@ divrem5(new_begin, new_end);
+	
 	chunk = (struct mpool_chunk *)new_begin;
+	//@ chars_split(begin, (void *)new_begin - (void *)begin);
+	//@ chars_split((void *)new_begin, (void *)new_end - (void *)new_begin);
+	//@ assume(sizeof(struct mpool_chunk) <= MPOOL_ENTRY_SIZE);
 	//@ mpool_chunk_raw_of_chars((void *)new_begin);
 	chunk->limit = (struct mpool_chunk *)new_end;
 
 	mpool_lock(p);
 	chunk->next_chunk = p->chunk_list;
+	// close mpool_chunk(chunk);
 	p->chunk_list = chunk;
 	mpool_unlock(p);
 
+	//@ leak chars(begin, _, _);
+	//@ leak chars((void *)new_end, _, _);
+	//@ leak divrem(new_end, MPOOL_ENTRY_SIZE, _, 0);
+	//@ leak divrem(new_end - new_begin, MPOOL_ENTRY_SIZE, _, 0);
 	return true;
 }
 
@@ -365,27 +412,38 @@ static void *mpool_alloc_no_fallback(struct mpool *p)
 
 	new_chunk = (struct mpool_chunk *)((uintptr_t)chunk + p->entry_size);
 	if (new_chunk >= chunk->limit) {
+		//@ assert(chunk->limit |-> ?limit);
+		
 		p->chunk_list = chunk->next_chunk;
 		// mpool_chunk_to_chars(chunk);
 		//@ open_struct(chunk);
 		//@ chars_join((void*)chunk);
 		//@ divrem_pos();
-		// FIXME:
-		//@ leak divrem(_, _, _, _);
+
+		//@ leak divrem((int)chunk, MPOOL_ENTRY_SIZE, _, 0);
+		//@ leak divrem((int)limit, MPOOL_ENTRY_SIZE, _, 0);
 	} else {
+		//@ assert(chunk->limit |-> ?limit);
+		
 		//@ mpool_chunk_split_entry(chunk);
 		//@ assume(sizeof(struct mpool_chunk) <= (void *)chunk->limit - (void *)chunk - MPOOL_ENTRY_SIZE);
+		//@ divrem3((int)chunk);
+		//@ divrem5((int)new_chunk, (int)chunk->limit);
 		//@ mpool_chunk_raw_of_chars((void *)new_chunk);
 		// DIFF: hf uses '*new_chunk = *chunk;'
 		new_chunk->limit = chunk->limit;
 		new_chunk->next_chunk = chunk->next_chunk;
 		
 		p->chunk_list = new_chunk;
-		//@ divrem_pos2();
+		//@ divrem3((uintptr_t)chunk);
 		//@ close mpool_chunk(new_chunk);
 		//@ close mpool(p, _, _);
 		//@ open_struct(chunk);
 		
+		//@ leak divrem((int)chunk, MPOOL_ENTRY_SIZE, _, 0);
+		//@ leak divrem((int)new_chunk, MPOOL_ENTRY_SIZE, _, 0);
+		//@ leak divrem((int)limit, MPOOL_ENTRY_SIZE, _, 0);
+		//@ leak divrem((int)limit - (int)new_chunk, MPOOL_ENTRY_SIZE, _, 0);
 	}
 
 	ret = chunk;

@@ -110,14 +110,12 @@ bool mpool_add_chunk(struct mpool *p, void *begin, size_t size);
 		&*& begin != 0
 		&*& chars(begin, size, _)
 		&*& size >= sizeof(struct mpool_chunk)
-		&*& divrem(size, MPOOL_ENTRY_SIZE, ?q, 0)
 		;
 	@*/
 	/*@ ensures
 		result ? [f]mpool(p, true, have_fb)
 		:	[f]mpool(p, non_empty, have_fb)
 			&*& chars(begin, size, _)
-			&*& divrem(size, MPOOL_ENTRY_SIZE, q, 0)
 		;
 	@*/
 
